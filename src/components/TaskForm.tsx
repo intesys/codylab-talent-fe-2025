@@ -19,7 +19,7 @@ export function TaskForm() {
   const today = new Date().toISOString().slice(0, 10);
 
   // Funzione helper per convertire Date in formato YYYY-MM-DD
-  const formatDateForInput = (date: string | Date | null | undefined): string => {
+  const formatDateForInput = (date: string | Date): string => {
     if (!date) return today;
     if (typeof date === 'string') {
       // Se è già una stringa, assumiamo sia nel formato corretto

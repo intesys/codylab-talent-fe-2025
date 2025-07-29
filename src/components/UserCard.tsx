@@ -1,12 +1,15 @@
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import type { Users } from "../generated/api/models/Users";
 import classes from "./UserCard.module.css";
 import type { Tasks } from "../generated/api";
 
 export function UserCard({ user, onUserClick, onTaskClick }: { user: Users; onUserClick: (user: Users) => void; onTaskClick: (task: Tasks) => void }) {
   const {userId} = useParams();
+  const navigate = useNavigate();
 
-
+  const handleNewTaskClick = () => {
+    navigate(`/workload/users/${user.id}/add/task`);
+  };
   return (
     <section className={`${classes.user} ${user.id?.toString() === userId ? classes.active : ""}`}>
       <h2 onClick={() => onUserClick(user)}>{user.firstName} {user.lastName}</h2>
@@ -19,8 +22,9 @@ export function UserCard({ user, onUserClick, onTaskClick }: { user: Users; onUs
             </ul>
           </div>
         ))}
-        <p className={classes.newTask}>Nuova Task</p>
+        <p className={classes.newTask} onClick={()=>handleNewTaskClick()}>Nuova Task</p>
       </div>
     </section>
   );
 }
+

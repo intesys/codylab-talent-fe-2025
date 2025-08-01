@@ -1,7 +1,9 @@
 import type { Projects } from "../generated/api/models/Projects";
 import type { Tasks } from "../generated/api/models/Tasks";
-import classes from "./ProjectCard.module.css";
+import GanntRender from "./GanntRender";
+import classes from "./ProjectCard.module.css" ;
 import { useNavigate, useParams } from "react-router-dom";
+
 
 export function ProjectCard({
   project,
@@ -21,17 +23,24 @@ export function ProjectCard({
 
   return (
     <section className={`${classes.project} ${project.id?.toString() === projectId ? classes.active : ""}`}>
-      <h2 onClick={() => onProjectClick(project)}>{project.name}</h2>
-      <div className={classes.tasks}>
-        <ul>
-        {project.tasks?.map((task) => (
-            <li key={task.id} onClick={() => onTaskClick(task)} className={task.id?.toString() === taskId ? classes.active : ""}>
-              {task.name}
-            </li>
-          ))}
-        </ul>
-          <p className={classes.newTask} onClick={handleNewTaskClick}>Nuova Task</p>
+      <div className={classes.ContentWrapper} >
+        <div className={classes.ProjectInformation}>
+          <h2 onClick={() => onProjectClick(project)}>{project.name}</h2>
+          <div className={classes.tasks}>
+            <ul>
+              {project.tasks?.map((task) => (
+                <li key={task.id} onClick={() => onTaskClick(task)} className={task.id?.toString() === taskId ? classes.active : ""}>
+                  {task.name}
+                </li>
+              ))}
+            </ul>
+            <p className={classes.newTask} onClick={handleNewTaskClick}>Nuova Task</p>
+          </div>
+        </div>
+        <div className={classes.GanntContainer}>
+            <GanntRender />
+        </div>
       </div>
-    </section>
+</section>
   );
 }

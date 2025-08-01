@@ -48,3 +48,26 @@
 .newTask:hover{
   color: #007bff;
 }
+
+.ProjectInformation {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  
+  margin-top: 1%;
+  margin-left:1%
+}
+
+.ContentWrapper {
+  display: flex;
+  gap:5%;
+
+}
+
+.GanntContainer{
+  flex: 1;
+  padding: 16px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}

@@ -11,8 +11,10 @@ interface GanttProps {
 const GanttChart: React.FC<GanttProps> = ({ tasks, startDate, endDate }) => {
   // Normalizzazione date
   const projectStart = new Date(startDate);
+  projectStart.setHours(0, 0, 0, 0);
   const projectEnd = new Date(endDate);
-  const totalDays = Math.ceil((projectEnd.getTime() - projectStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  projectEnd.setHours(23, 59, 59, 999); // Fine dell'ultimo giorno
+  const totalDays = Math.ceil((projectEnd.getTime() - projectStart.getTime()) / (1000 * 60 * 60 * 24));
 
   // Genera timeline mesi
   const generateMonths = (): TimelineMonth[] => {
@@ -27,7 +29,7 @@ const GanttChart: React.FC<GanttProps> = ({ tasks, startDate, endDate }) => {
       months.push({
         label: current.toLocaleString('it-IT', { month: 'short' }).toUpperCase() + ' ' + year,
         start: new Date(current),
-        end: new Date(year, month, lastDay),
+        end: new Date(year, month, lastDay, 23, 59, 59, 999),
         daysInMonth: lastDay
       });
 
@@ -57,10 +59,24 @@ const GanttChart: React.FC<GanttProps> = ({ tasks, startDate, endDate }) => {
   const months = generateMonths();
   const days = generateDays();
 
-  // Calcola posizione temporale (0-100%)
-  const calculatePosition = (date: Date): number => {
-    const diff = date.getTime() - projectStart.getTime();
-    return (diff / (projectEnd.getTime() - projectStart.getTime())) * 100;
+  // Calcola il numero di giorni dall'inizio del progetto
+  const getDayOffset = (date: Date): number => {
+    const normalizedDate = new Date(date);
+    normalizedDate.setHours(0, 0, 0, 0);
+    const diff = normalizedDate.getTime() - projectStart.getTime();
+    return diff / (1000 * 60 * 60 * 24); // Mantieni la precisione decimale
+  };
+
+  // Calcola posizione e larghezza in base ai giorni
+  const calculateTaskStyle = (start: Date, end: Date) => {
+    const startDay = Math.max(0, getDayOffset(start));
+    const endDay = Math.min(totalDays, getDayOffset(new Date(end)) + 1); // +1 per includere tutto l'ultimo giorno
+    const dayWidth = 100 / totalDays;
+
+    return {
+      left: `${startDay * dayWidth}%`,
+      width: `${Math.max(0, (endDay - startDay) * dayWidth)}%`,
+    };
   };
 
   // Calcola la larghezza totale in pixel
@@ -101,24 +117,23 @@ const GanttChart: React.FC<GanttProps> = ({ tasks, startDate, endDate }) => {
           ))}
         </div>
 
-        {/* Barre dei task - MODIFICATO per righe separate */}
+        {/* Barre dei task */}
         <div className={styles.tasksContainer}>
-          {tasks.map((task, index) => {
+          {tasks.map((task) => {
             const start = new Date(task.start);
             const end = new Date(task.end);
-            const left = calculatePosition(start);
-            const width = calculatePosition(end) - left;
+            end.setHours(23, 59, 59, 999); // Fine del giorno
 
             return (
               <div key={task.id} className={styles.taskRow} style={{ height: '40px' }}>
                 <div
                   className={styles.taskBar}
                   style={{
-                    left: `${left}%`,
-                    width: `${width}%`,
+                    ...calculateTaskStyle(start, end),
                     backgroundColor: task.color || '#4CAF50',
                     top: '50%',
-                    zIndex: 2
+                    zIndex: 2,
+                    transform: 'translateY(-50%)' // Aggiunto per centrare verticalmente
                   }}
                 >
                   <span className={styles.taskLabel}>{task.name}</span>

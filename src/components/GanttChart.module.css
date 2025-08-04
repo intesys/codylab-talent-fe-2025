@@ -1,31 +1,45 @@
-/* Timeline mesi */
+/* Container principale */
+.ganttOuterContainer {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ganttScrollContainer {
+  min-width: fit-content;
+  position: relative;
+}
+
+
 .timelineMonths {
   display: flex;
   height: 40px;
   background-color: #f5f5f5;
   border-bottom: 1px solid #ddd;
-  min-width: 100%;
   position: sticky;
   top: 0;
-  z-index: 3;
+  z-index: 4;
+
 }
 
 .month {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
-  font-size: 14px;
+  font-weight: 600;
+  font-size: 13px;
+  color: #555;
   border-right: 1px solid #e0e0e0;
   box-sizing: border-box;
+  flex-shrink: 0;
 }
 
-/* Timeline giorni */
 .timelineDays {
   display: flex;
   height: 30px;
   background-color: #f9f9f9;
-  min-width: 100%;
   position: sticky;
   top: 40px;
   z-index: 3;
@@ -35,49 +49,60 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 11px;
+  color: #666;
   border-right: 1px solid #eee;
   box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .weekend {
   background-color: #f0f0f0;
-  color: #a0a0a0;
+  color: #999;
 }
 
+
 .tasksContainer {
-  display: flex;
-  flex-direction: column;
-  min-width: 100%;
+  position: relative;
+  min-height: 200px;
+  background-color: #fff;
+  padding-top: 8px;
+}
+
+.taskRow {
+  position: relative;
+  height: 40px;
+  margin-bottom: 8px;
 }
 
 .taskBar {
   position: absolute;
-  height: auto;
-  min-height: 24px;
-  border-radius: 4px;
+  height: 24px;
+  min-width: 4px;
+  border-radius: 3px;
   display: flex;
   align-items: center;
-  padding: 4px 8px;
+  padding: 0 8px;
   color: white;
   font-size: 12px;
   font-weight: 500;
-  overflow: visible;
-  white-space: normal;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   box-sizing: border-box;
-  word-break: break-word;
+  transform: translateY(-50%);
+  top: 50%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.taskBar:hover {
+  z-index: 5;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 .taskLabel {
+  flex-grow: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
   padding: 0 4px;
-  width: 100%;
-}
-
-
-.taskRow {
-  position: relative;
-  height: auto;
-  min-height: 40px;
-  margin-bottom: 8px;
 }

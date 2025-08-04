@@ -22,10 +22,11 @@ const GanntRender: React.FC = () => {
     {
       id: 'task-3',
       name: 'Sviluppo Backend',
-      start: '2025-07-01',
-      end: '2025-06-05',
+      start: '2025-06-16',
+      end: '2025-06-20',
       color: '#FF9800'
     },
+
     {
       id: 'task-4',
       name: 'Testing',

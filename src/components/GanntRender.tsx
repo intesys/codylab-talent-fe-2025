@@ -41,7 +41,7 @@ const GanntRender: React.FC = () => {
       <GanntChart
         tasks={tasks}
         startDate="2025-06-01"
-        endDate="2025-07-30"
+        endDate="2025-07-31"
       />
     </div>
     </>

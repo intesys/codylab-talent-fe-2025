@@ -3,7 +3,6 @@
   border-radius: 8px;
   padding: 16px;
   background-color: #f9f9f9;
-  /* Rimuovi overflow: hidden se presente */
 
   &.active {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);

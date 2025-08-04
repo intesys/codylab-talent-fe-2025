@@ -45,51 +45,39 @@
   color: #a0a0a0;
 }
 
-/* Container delle task */
 .tasksContainer {
   display: flex;
   flex-direction: column;
   min-width: 100%;
 }
 
-/* Barra della task - MODIFICHE */
 .taskBar {
   position: absolute;
   height: auto;
-  /* Altezza automatica */
   min-height: 24px;
-  /* Altezza minima */
   border-radius: 4px;
   display: flex;
   align-items: center;
   padding: 4px 8px;
-  /* Più padding */
   color: white;
   font-size: 12px;
   font-weight: 500;
   overflow: visible;
-  /* Testo visibile */
   white-space: normal;
-  /* Testo a capo */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   box-sizing: border-box;
   word-break: break-word;
-  /* Divisione parole */
 }
 
 .taskLabel {
-  /* Rimuovi overflow e text-overflow */
   padding: 0 4px;
   width: 100%;
-  /* Occupa tutto lo spazio */
 }
 
-/* Riga singola task - MODIFICHE */
+
 .taskRow {
   position: relative;
   height: auto;
-  /* Altezza automatica */
   min-height: 40px;
-  /* Altezza minima */
   margin-bottom: 8px;
 }

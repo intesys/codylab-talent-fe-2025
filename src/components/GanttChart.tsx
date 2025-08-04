@@ -40,7 +40,7 @@ const GanttChart: React.FC<GanttProps> = ({ tasks, startDate, endDate }) => {
   // Genera giorni con weekend evidenziati
   const generateDays = (): TimelineDay[] => {
     const days: TimelineDay[] = [];
-    let current = new Date(projectStart);
+    const current = new Date(projectStart);
 
     while (current <= projectEnd) {
       days.push({
@@ -63,60 +63,65 @@ const GanttChart: React.FC<GanttProps> = ({ tasks, startDate, endDate }) => {
     return (diff / (projectEnd.getTime() - projectStart.getTime())) * 100;
   };
 
+  // Calcola la larghezza totale in pixel
+  const totalWidth = totalDays * 30; // 30px per giorno
+
   return (
-    <div className={styles.ganttContainer}>
-      {/* Timeline - Mesi */}
-      <div className={styles.timelineMonths}>
-        {months.map((month) => (
-          <div
-            key={month.label}
-            className={styles.month}
-            style={{
-              width: `${(month.daysInMonth / totalDays) * 100}%`
-            }}
-          >
-            {month.label}
-          </div>
-        ))}
-      </div>
-
-      {/* Timeline - Giorni */}
-      <div className={styles.timelineDays}>
-        {days.map((day) => (
-          <div
-            key={day.date.toString()}
-            className={`${styles.day} ${day.isWeekend ? styles.weekend : ''}`}
-            style={{
-              width: `${(1 / totalDays) * 100}%`
-            }}
-          >
-            {day.day}
-          </div>
-        ))}
-      </div>
-
-      {/* Barre dei task */}
-      <div className={styles.tasksContainer}>
-        {tasks.map((task) => {
-          const start = new Date(task.start);
-          const end = new Date(task.end);
-          const left = calculatePosition(start);
-          const width = calculatePosition(end) - left;
-
-          return (
+    <div className={styles.ganttOuterContainer}>
+      <div className={styles.ganttScrollContainer} style={{ width: `${totalWidth}px` }}>
+        {/* Timeline - Mesi */}
+        <div className={styles.timelineMonths}>
+          {months.map((month) => (
             <div
-              key={task.id}
-              className={styles.taskBar}
+              key={month.label}
+              className={styles.month}
               style={{
-                left: `${left}%`,
-                width: `${width}%`,
-                backgroundColor: task.color || '#4CAF50'
+                width: `${(month.daysInMonth / totalDays) * 100}%`
               }}
             >
-              <span className={styles.taskLabel}>{task.name}</span>
+              {month.label}
             </div>
-          );
-        })}
+          ))}
+        </div>
+
+        {/* Timeline - Giorni */}
+        <div className={styles.timelineDays}>
+          {days.map((day) => (
+            <div
+              key={day.date.toString()}
+              className={`${styles.day} ${day.isWeekend ? styles.weekend : ''}`}
+              style={{
+                width: `${(1 / totalDays) * 100}%`
+              }}
+            >
+              {day.day}
+            </div>
+          ))}
+        </div>
+
+        {/* Barre dei task */}
+        <div className={styles.tasksContainer}>
+          {tasks.map((task) => {
+            const start = new Date(task.start);
+            const end = new Date(task.end);
+            const left = calculatePosition(start);
+            const width = calculatePosition(end) - left;
+
+            return (
+              <div
+                key={task.id}
+                className={styles.taskBar}
+                style={{
+                  left: `${left}%`,
+                  width: `${width}%`,
+                  backgroundColor: task.color || '#4CAF50'
+                }}
+              >
+                <span className={styles.taskLabel}>{task.name}</span>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

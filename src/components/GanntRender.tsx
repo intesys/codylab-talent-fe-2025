@@ -18,6 +18,21 @@ const GanntRender: React.FC = () => {
       end: '2025-06-13',
       color: '#2196F3'
     }
+    ,
+    {
+      id: 'task-3',
+      name: 'Sviluppo Backend',
+      start: '2025-07-01',
+      end: '2025-06-05',
+      color: '#FF9800'
+    },
+    {
+      id: 'task-4',
+      name: 'Testing',
+      start: '2025-07-10',
+      end: '2025-07-15',
+      color: '#9C27B0'
+    }
   ];
 
   return (
@@ -26,7 +41,7 @@ const GanntRender: React.FC = () => {
       <GanntChart
         tasks={tasks}
         startDate="2025-06-01"
-        endDate="2025-06-30"
+        endDate="2025-07-30"
       />
     </div>
     </>

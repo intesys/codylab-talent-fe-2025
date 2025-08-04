@@ -76,7 +76,8 @@ const GanttChart: React.FC<GanttProps> = ({ tasks, startDate, endDate }) => {
               key={month.label}
               className={styles.month}
               style={{
-                width: `${(month.daysInMonth / totalDays) * 100}%`
+                width: `${(month.daysInMonth / totalDays) * 100}%`,
+                minWidth: `${month.daysInMonth * 30}px`
               }}
             >
               {month.label}
@@ -91,7 +92,8 @@ const GanttChart: React.FC<GanttProps> = ({ tasks, startDate, endDate }) => {
               key={day.date.toString()}
               className={`${styles.day} ${day.isWeekend ? styles.weekend : ''}`}
               style={{
-                width: `${(1 / totalDays) * 100}%`
+                width: `${(1 / totalDays) * 100}%`,
+                minWidth: '30px'
               }}
             >
               {day.day}
@@ -99,25 +101,28 @@ const GanttChart: React.FC<GanttProps> = ({ tasks, startDate, endDate }) => {
           ))}
         </div>
 
-        {/* Barre dei task */}
+        {/* Barre dei task - MODIFICATO per righe separate */}
         <div className={styles.tasksContainer}>
-          {tasks.map((task) => {
+          {tasks.map((task, index) => {
             const start = new Date(task.start);
             const end = new Date(task.end);
             const left = calculatePosition(start);
             const width = calculatePosition(end) - left;
 
             return (
-              <div
-                key={task.id}
-                className={styles.taskBar}
-                style={{
-                  left: `${left}%`,
-                  width: `${width}%`,
-                  backgroundColor: task.color || '#4CAF50'
-                }}
-              >
-                <span className={styles.taskLabel}>{task.name}</span>
+              <div key={task.id} className={styles.taskRow} style={{ height: '40px' }}>
+                <div
+                  className={styles.taskBar}
+                  style={{
+                    left: `${left}%`,
+                    width: `${width}%`,
+                    backgroundColor: task.color || '#4CAF50',
+                    top: '50%',
+                    zIndex: 2
+                  }}
+                >
+                  <span className={styles.taskLabel}>{task.name}</span>
+                </div>
               </div>
             );
           })}

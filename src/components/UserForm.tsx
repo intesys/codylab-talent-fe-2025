@@ -15,6 +15,12 @@ export function UserForm() {
   const { id: userId } = useParams();
   const currentUser = usersData.find((u) => u.id?.toString() === userId);
 
+  if (!keycloak.hasRealmRole("Admin")) {
+    alert("Non hai i permessi per modificare un utente.");
+    navigate("/workload");
+    return null;
+  }
+
   const defaultValues = currentUser
     ? {
         firstName: currentUser.firstName ?? "",
@@ -50,7 +56,6 @@ export function UserForm() {
           dailyHours: value.dailyHours,
         },
       };
-      if(keycloak.hasRealmRole("Admin")) {
       try {
         await save(userData);
         await refreshWorkload();
@@ -60,12 +65,7 @@ export function UserForm() {
         console.error("Error saving user:", error);
         alert("Errore durante il salvataggio dell'utente.");
       }
-    } else {
-        alert("Non hai i permessi per salvare o modificare un utente."); 
-        navigate("/workload");
-    }
     },
-
   });
 
   return (

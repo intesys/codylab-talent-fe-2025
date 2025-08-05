@@ -1,7 +1,7 @@
 import classes from './Actions.module.css';
 import { Link } from "react-router-dom";
 import { useLocation } from 'react-router-dom';
-import  keycloak  from './keycloak'; //
+import  keycloak  from './keycloak'; 
 
 export function Actions() {
   const location = useLocation();

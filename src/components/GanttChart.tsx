@@ -1,39 +1,44 @@
 import React from 'react';
+import dayjs from 'dayjs';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import styles from './GanttChart.module.css';
 import { type GanttTask, type TimelineMonth, type TimelineDay } from './Types';
 
+// Estendi dayjs con i plugin necessari
+dayjs.extend(isSameOrBefore);
+dayjs.extend(isSameOrAfter);
+
 interface GanttProps {
   tasks: GanttTask[];
-  startDate: string | Date;
-  endDate: string | Date;
+  startDate: string | Date | dayjs.Dayjs;
+  endDate: string | Date | dayjs.Dayjs;
 }
 
 const GanttChart: React.FC<GanttProps> = ({ tasks, startDate, endDate }) => {
-  // Normalizzazione date
-  const projectStart = new Date(startDate);
-  projectStart.setHours(0, 0, 0, 0);
-  const projectEnd = new Date(endDate);
-  projectEnd.setHours(23, 59, 59, 999); // Fine dell'ultimo giorno
-  const totalDays = Math.ceil((projectEnd.getTime() - projectStart.getTime()) / (1000 * 60 * 60 * 24));
+  // Normalizzazione date con dayjs
+  const projectStart = dayjs(startDate).startOf('day');
+  const projectEnd = dayjs(endDate).endOf('day');
+  const totalDays = projectEnd.diff(projectStart, 'day') + 1; // +1 per includere entrambi i giorni estremi
 
   // Genera timeline mesi
   const generateMonths = (): TimelineMonth[] => {
     const months: TimelineMonth[] = [];
-    let current = new Date(projectStart);
+    let current = projectStart.startOf('month');
 
-    while (current <= projectEnd) {
-      const year = current.getFullYear();
-      const month = current.getMonth();
-      const lastDay = new Date(year, month + 1, 0).getDate();
+    while (current.isSameOrBefore(projectEnd, 'day')) {
+      const monthStart = current.startOf('month');
+      const monthEnd = current.endOf('month');
+      const daysInMonth = monthEnd.diff(monthStart, 'day') + 1;
 
       months.push({
-        label: current.toLocaleString('it-IT', { month: 'short' }).toUpperCase() + ' ' + year,
-        start: new Date(current),
-        end: new Date(year, month, lastDay, 23, 59, 59, 999),
-        daysInMonth: lastDay
+        label: current.format('MMM YYYY').toUpperCase(),
+        start: monthStart.toDate(),
+        end: monthEnd.toDate(),
+        daysInMonth
       });
 
-      current = new Date(year, month + 1, 1);
+      current = current.add(1, 'month').startOf('month');
     }
 
     return months;
@@ -42,15 +47,15 @@ const GanttChart: React.FC<GanttProps> = ({ tasks, startDate, endDate }) => {
   // Genera giorni con weekend evidenziati
   const generateDays = (): TimelineDay[] => {
     const days: TimelineDay[] = [];
-    const current = new Date(projectStart);
+    let current = projectStart;
 
-    while (current <= projectEnd) {
+    while (current.isSameOrBefore(projectEnd, 'day')) {
       days.push({
-        date: new Date(current),
-        day: current.getDate(),
-        isWeekend: current.getDay() === 0 || current.getDay() === 6
+        date: current.toDate(),
+        day: current.date(),
+        isWeekend: current.day() === 0 || current.day() === 6
       });
-      current.setDate(current.getDate() + 1);
+      current = current.add(1, 'day');
     }
 
     return days;
@@ -60,17 +65,15 @@ const GanttChart: React.FC<GanttProps> = ({ tasks, startDate, endDate }) => {
   const days = generateDays();
 
   // Calcola il numero di giorni dall'inizio del progetto
-  const getDayOffset = (date: Date): number => {
-    const normalizedDate = new Date(date);
-    normalizedDate.setHours(0, 0, 0, 0);
-    const diff = normalizedDate.getTime() - projectStart.getTime();
-    return diff / (1000 * 60 * 60 * 24); // Mantieni la precisione decimale
+  const getDayOffset = (date: dayjs.Dayjs | Date): number => {
+    const normalizedDate = dayjs(date).startOf('day');
+    return normalizedDate.diff(projectStart, 'day', true); // Precisione decimale
   };
 
   // Calcola posizione e larghezza in base ai giorni
-  const calculateTaskStyle = (start: Date, end: Date) => {
+  const calculateTaskStyle = (start: dayjs.Dayjs | Date, end: dayjs.Dayjs | Date) => {
     const startDay = Math.max(0, getDayOffset(start));
-    const endDay = Math.min(totalDays, getDayOffset(new Date(end)) + 1); // +1 per includere tutto l'ultimo giorno
+    const endDay = Math.min(totalDays, getDayOffset(dayjs(end).endOf('day')) + 1); // +1 per includere tutto l'ultimo giorno
     const dayWidth = 100 / totalDays;
 
     return {
@@ -120,9 +123,8 @@ const GanttChart: React.FC<GanttProps> = ({ tasks, startDate, endDate }) => {
         {/* Barre dei task */}
         <div className={styles.tasksContainer}>
           {tasks.map((task) => {
-            const start = new Date(task.start);
-            const end = new Date(task.end);
-            end.setHours(23, 59, 59, 999); // Fine del giorno
+            const start = dayjs(task.start).startOf('day');
+            const end = dayjs(task.end).endOf('day');
 
             return (
               <div key={task.id} className={styles.taskRow} style={{ height: '40px' }}>
@@ -133,7 +135,7 @@ const GanttChart: React.FC<GanttProps> = ({ tasks, startDate, endDate }) => {
                     backgroundColor: task.color || '#4CAF50',
                     top: '50%',
                     zIndex: 2,
-                    transform: 'translateY(-50%)' // Aggiunto per centrare verticalmente
+                    transform: 'translateY(-50%)'
                   }}
                 >
                   <span className={styles.taskLabel}>{task.name}</span>

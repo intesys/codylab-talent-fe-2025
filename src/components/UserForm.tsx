@@ -5,6 +5,7 @@ import type { Users } from "../generated/api";
 import { users } from "../lib/api/api";
 import { WorkloadContext } from "../pages/WorkloadContext";
 import classes from "./UserForm.module.css";
+import keycloak from "./keycloak";
 
 export function UserForm() {
   const { workloadData: usersData, refreshWorkload } =
@@ -49,7 +50,7 @@ export function UserForm() {
           dailyHours: value.dailyHours,
         },
       };
-
+      if(keycloak.hasRealmRole("Admin")) {
       try {
         await save(userData);
         await refreshWorkload();
@@ -59,7 +60,12 @@ export function UserForm() {
         console.error("Error saving user:", error);
         alert("Errore durante il salvataggio dell'utente.");
       }
+    } else {
+        alert("Non hai i permessi per salvare o modificare un utente."); 
+        navigate("/workload");
+    }
     },
+
   });
 
   return (

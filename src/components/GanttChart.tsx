@@ -17,7 +17,11 @@ interface GanttProps {
   endDate: string | Date | dayjs.Dayjs;
 }
 
-export const GanttChart: React.FC<GanttProps> = ({ tasks, startDate, endDate }) => {
+export const GanttChart: React.FC<GanttProps> = ({
+  tasks,
+  startDate,
+  endDate,
+}) => {
   // Normalizzazione date con dayjs
   const projectStart = dayjs(startDate).startOf("day");
   const projectEnd = dayjs(endDate).endOf("day");
@@ -33,28 +37,31 @@ export const GanttChart: React.FC<GanttProps> = ({ tasks, startDate, endDate }) 
   ); // Aggiornato con useMemo per ottimizzazione generateDays(projectStart, projectEnd);
 
   // Calcola il numero di giorni dall'inizio del progetto
-  const getDayOffset = useCallback((date: dayjs.Dayjs | Date): number => {
-    const normalizedDate = dayjs(date).startOf("day");
-    return normalizedDate.diff(projectStart, "day", true); // Precisione decimale
-  }, [projectStart]);
+  const getDayOffset = useCallback(
+    (date: dayjs.Dayjs | Date): number => {
+      const normalizedDate = dayjs(date).startOf("day");
+      return normalizedDate.diff(projectStart, "day", true); // Precisione decimale
+    },
+    [projectStart]
+  );
 
   // Calcola posizione e larghezza in base ai giorni
-  const calculateTaskStyle = useCallback( (
-    start: dayjs.Dayjs | Date,
-    end: dayjs.Dayjs | Date
-  ) => {
-    const startDay = Math.max(0, getDayOffset(start));
-    const endDay = Math.min(
-      totalDays,
-      getDayOffset(dayjs(end).endOf("day")) + 1
-    ); // +1 per includere tutto l'ultimo giorno
-    const dayWidth = 100 / totalDays;
+  const calculateTaskStyle = useCallback(
+    (start: dayjs.Dayjs | Date, end: dayjs.Dayjs | Date) => {
+      const startDay = Math.max(0, getDayOffset(start));
+      const endDay = Math.min(
+        totalDays,
+        getDayOffset(dayjs(end).endOf("day")) + 1
+      ); // +1 per includere tutto l'ultimo giorno
+      const dayWidth = 100 / totalDays;
 
-    return {
-      left: `${startDay * dayWidth}%`,
-      width: `${Math.max(0, (endDay - startDay) * dayWidth)}%`,
-    };
-  }, [getDayOffset, totalDays]);
+      return {
+        left: `${startDay * dayWidth}%`,
+        width: `${Math.max(0, (endDay - startDay) * dayWidth)}%`,
+      };
+    },
+    [getDayOffset, totalDays]
+  );
 
   // Calcola la larghezza totale in pixel
   const totalWidth = totalDays * 30; // 30px per giorno

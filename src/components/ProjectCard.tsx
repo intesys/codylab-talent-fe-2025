@@ -30,36 +30,40 @@ export function ProjectCard({
       }`}
     >
       <div className={classes.ContentWrapper}>
-        <div className={classes.ProjectInformation}>
-          <h2 onClick={() => onProjectClick(project)}>{project.name}</h2>
-          <div className={classes.tasks}>
-            <ul>
-              {project.tasks?.map((task) => (
-                <li
-                  key={task.id}
-                  onClick={() => onTaskClick(task)}
-                  className={
-                    task.id?.toString() === taskId ? classes.active : ""
-                  }
-                >
-                  {task.name}
-                </li>
-              ))}
-            </ul>
-            <p className={classes.newTask} onClick={handleNewTaskClick}>
-              Nuova Task
-            </p>
+        <h2 onClick={() => onProjectClick(project)}>{project.name}</h2>
+
+        <div className={classes.ProjectWrapper}>
+          <div className={classes.ProjectInformation}>
+            <div className={classes.tasks}>
+              <ul>
+                {project.tasks?.map((task) => (
+                  <li
+                    key={task.id}
+                    onClick={() => onTaskClick(task)}
+                    className={
+                      task.id?.toString() === taskId ? classes.active : ""
+                    }
+                  >
+                    {task.name}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          <div className={classes.GanntContainer}>
+            <div className={classes.ganttInnerContainer}>
+              <GanttChart
+                tasks={tasks}
+                startDate={startDate}
+                endDate={endDate}
+              />
+            </div>
           </div>
         </div>
-        <div className={classes.GanntContainer}>
-          <div className={classes.ganttInnerContainer}>
-            <GanttChart
-              tasks={tasks}
-              startDate={startDate}
-              endDate={endDate}
-            />
-          </div>
-        </div>
+
+        <button className={classes.newTask} onClick={handleNewTaskClick}>
+          Nuova Task
+        </button>
       </div>
     </section>
   );

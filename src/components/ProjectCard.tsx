@@ -1,17 +1,18 @@
+import { useNavigate, useParams } from "react-router-dom";
 import type { Projects } from "../generated/api/models/Projects";
 import type { Tasks } from "../generated/api/models/Tasks";
-import GanntRender from "./GanntRender";
+import { GanttChart } from "./GanttChart";
 import classes from "./ProjectCard.module.css";
-import { useNavigate, useParams } from "react-router-dom";
+import { endDate, startDate, tasks } from "./projectCardMock";
 
 export function ProjectCard({
   project,
   onProjectClick,
-  onTaskClick
+  onTaskClick,
 }: {
   project: Projects;
   onProjectClick: (project: Projects) => void;
-  onTaskClick: (task: Tasks) => void
+  onTaskClick: (task: Tasks) => void;
 }) {
   const navigate = useNavigate();
   const { projectId, taskId } = useParams();
@@ -23,7 +24,11 @@ export function ProjectCard({
   };
 
   return (
-    <section className={`${classes.project} ${project.id?.toString() === projectId ? classes.active : ""}`}>
+    <section
+      className={`${classes.project} ${
+        project.id?.toString() === projectId ? classes.active : ""
+      }`}
+    >
       <div className={classes.ContentWrapper}>
         <div className={classes.ProjectInformation}>
           <h2 onClick={() => onProjectClick(project)}>{project.name}</h2>
@@ -33,7 +38,9 @@ export function ProjectCard({
                 <li
                   key={task.id}
                   onClick={() => onTaskClick(task)}
-                  className={task.id?.toString() === taskId ? classes.active : ""}
+                  className={
+                    task.id?.toString() === taskId ? classes.active : ""
+                  }
                 >
                   {task.name}
                 </li>
@@ -46,7 +53,11 @@ export function ProjectCard({
         </div>
         <div className={classes.GanntContainer}>
           <div className={classes.ganttInnerContainer}>
-          <GanntRender />
+            <GanttChart
+              tasks={tasks}
+              startDate={startDate}
+              endDate={endDate}
+            />
           </div>
         </div>
       </div>

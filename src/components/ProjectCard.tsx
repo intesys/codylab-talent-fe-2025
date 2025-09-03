@@ -5,6 +5,14 @@ import type { Tasks } from "../generated/api/models/Tasks";
 import { GanttChart } from "./GanttChart";
 import classes from "./ProjectCard.module.css";
 
+const DEFAULT_START = "2025-06-01";
+const DEFAULT_COLOR = "#BDBDBD"; // grigio per task senza chiave persistente
+
+const randomColor = (): string =>
+  `#${Array.from({ length: 6 })
+    .map(() => "0123456789ABCDEF"[Math.floor(Math.random() * 16)])
+    .join("")}`;
+
 export function ProjectCard({
   project,
   onProjectClick,
@@ -17,51 +25,81 @@ export function ProjectCard({
   const navigate = useNavigate();
   const { projectId, taskId } = useParams();
 
-  const [ganttTasks, setGanttTasks] = useState<{
-    id: string;
-    name: string;
-    start: string;
-    end: string;
-    color: string;
-  }[]>([]);
+  const [ganttTasks, setGanttTasks] = useState<
+    { id: string; name: string; start: string; end: string; color: string }[]
+  >([]);
+
+  const storageKey = `gantt_colors_project_${project?.id ?? "global"}`;
+
+  const readColorMap = (): Record<string, string> => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  };
+
+  const writeColorMap = (map: Record<string, string>) => {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(map));
+    } catch {
+    }
+  };
 
   useEffect(() => {
-    if (project.tasks) {
-      const tasksForGantt = project.tasks.map((task) => {
-        // Calcolo start in modo sicuro
-        let start: string;
-        if (task.startDate) {
-          const tempDate = new Date(task.startDate);
-          start = isNaN(tempDate.getTime())
-            ? "2025-06-01" // fallback se invalida
-            : tempDate.toISOString().slice(0, 10);
-        } else {
-          start = "2025-06-01"; // default se undefined/null
-        }
-
-        // Duration di default 1 giorno
-        const duration = task.duration ?? 1;
-        const end = new Date(new Date(start).getTime() + duration * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .slice(0, 10);
-
-        return {
-          id: task.id?.toString() ?? `task-${Date.now()}`,
-          name: task.name ?? "Nuova Task",
-          start,
-          end,
-          color: "#2196F3",
-        };
-      });
-      setGanttTasks(tasksForGantt);
+    if (!project?.tasks) {
+      setGanttTasks([]);
+      return;
     }
-  }, [project.tasks]);
 
-  const handleNewTaskClick = () => {
-    navigate(`/projects/${project.id}/tasks/add`, {
-      state: { projectId: project.id },
+    const colorMap = readColorMap();
+    const prevColorCount = Object.keys(colorMap).length;
+
+    const tasksForGantt = project.tasks.map((task, idx) => {
+      const stableKey =
+        task.id !== undefined && task.id !== null
+          ? `id:${task.id}`
+          : task.name
+          ? `name:${task.name}`
+          : null;
+
+      if (stableKey && !colorMap[stableKey]) {
+        colorMap[stableKey] = randomColor();
+      }
+
+      const start =
+        task.startDate && !isNaN(new Date(task.startDate).getTime())
+          ? new Date(task.startDate).toISOString().slice(0, 10)
+          : DEFAULT_START;
+
+      const duration = task.duration ?? 1;
+      const end = new Date(new Date(start).getTime() + duration * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .slice(0, 10);
+
+      const color = stableKey ? colorMap[stableKey] : DEFAULT_COLOR;
+      const ganttId = stableKey ?? `idx:${idx}`;
+
+      return {
+        id: ganttId,
+        name: task.name ?? "Nuova Task",
+        start,
+        end,
+        color,
+      };
     });
+
+    if (Object.keys(colorMap).length !== prevColorCount) writeColorMap(colorMap);
+    setGanttTasks(tasksForGantt);
+  }, [project?.tasks]);
+
+  const handleNewTaskClick = (): void => {
+    navigate(`/projects/${project.id}/tasks/add`, { state: { projectId: project.id } });
   };
+
+  const listKey = (task: Tasks, idx: number): string =>
+    task.id !== undefined && task.id !== null ? `id:${task.id}` : task.name ? `name:${task.name}` : `idx:${idx}`;
 
   return (
     <section
@@ -76,11 +114,10 @@ export function ProjectCard({
           <div className={classes.ProjectInformation}>
             <div className={classes.tasks}>
               <ul>
-                {/* Modifica per lo spazio  */}
-                <div style={{ width: "100px", height: "70px" }}></div> 
-                {project.tasks?.map((task) => (
+                <div style={{ width: "100px", height: "70px" }} />
+                {project.tasks?.map((task, idx) => (
                   <li
-                    key={task.id}
+                    key={listKey(task, idx)}
                     onClick={() => onTaskClick(task)}
                     className={task.id?.toString() === taskId ? classes.active : ""}
                   >
@@ -90,13 +127,10 @@ export function ProjectCard({
               </ul>
             </div>
           </div>
+
           <div className={classes.GanntContainer}>
             <div className={classes.ganttInnerContainer}>
-              <GanttChart
-                tasks={ganttTasks}
-                startDate="2025-06-01"
-                endDate="2025-07-31"
-              />
+              <GanttChart tasks={ganttTasks} startDate={DEFAULT_START} endDate="2025-07-31" />
             </div>
           </div>
         </div>

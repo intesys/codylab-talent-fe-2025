@@ -5,14 +5,16 @@ import React, { useCallback, useMemo } from "react";
 import styles from "./GanttChart.module.css";
 import { generateDays } from "./GanttChart/generateDays";
 import { generateMonths } from "./GanttChart/generateMonths";
-import { type GanttTask } from "./Types";
+// import { type GanttTask } from "./Types";
+import { useNavigate } from "react-router-dom";
+import type { Tasks } from "../generated/api";
 
 // Estendi dayjs con i plugin necessari
 dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
 
 interface GanttProps {
-  tasks: GanttTask[];
+  tasks: Tasks[];
   startDate: string | Date | dayjs.Dayjs;
   endDate: string | Date | dayjs.Dayjs;
 }
@@ -22,6 +24,7 @@ export const GanttChart: React.FC<GanttProps> = ({
   startDate,
   endDate,
 }) => {
+  const navigate = useNavigate();
   // Normalizzazione date con dayjs
   const projectStart = dayjs(startDate).startOf("day");
   const projectEnd = dayjs(endDate).endOf("day");
@@ -107,8 +110,10 @@ export const GanttChart: React.FC<GanttProps> = ({
         {/* Barre dei task */}
         <div className={styles.tasksContainer}>
           {tasks.map((task) => {
-            const start = dayjs(task.start).startOf("day");
-            const end = dayjs(task.end).endOf("day");
+            const start = dayjs(task.startDate).startOf("day");
+            const end = dayjs(task.startDate)
+              .add(task.duration ?? 0, "day")
+              .endOf("day");
 
             return (
               <div
@@ -120,11 +125,13 @@ export const GanttChart: React.FC<GanttProps> = ({
                   className={styles.taskBar}
                   style={{
                     ...calculateTaskStyle(start, end),
-                    backgroundColor: task.color || "#4CAF50",
+                    backgroundColor: task.state === "in progress" ? "blue" : task.state === "completed" ? "green" : "red",
                     top: "50%",
                     zIndex: 2,
                     transform: "translateY(-50%)",
+                    textAlign: "center"
                   }}
+                  onClick={() => navigate(`/tasks/${task.id}`)}
                 >
                   <span className={styles.taskLabel}>{task.name}</span>
                 </div>

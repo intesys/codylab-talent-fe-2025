@@ -3,7 +3,7 @@ import type { Projects } from "../generated/api/models/Projects";
 import type { Tasks } from "../generated/api/models/Tasks";
 import { GanttChart } from "./GanttChart";
 import classes from "./ProjectCard.module.css";
-import { endDate, startDate, tasks } from "./projectCardMock";
+import { endDate, startDate } from "./projectCardMock";
 
 export function ProjectCard({
   project,
@@ -53,7 +53,7 @@ export function ProjectCard({
           <div className={classes.GanntContainer}>
             <div className={classes.ganttInnerContainer}>
               <GanttChart
-                tasks={tasks}
+                tasks={project.tasks??[]}
                 startDate={startDate}
                 endDate={endDate}
               />

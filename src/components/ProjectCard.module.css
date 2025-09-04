@@ -46,6 +46,8 @@
 .newTask {
   width: fit-content;
   text-decoration: none;
+  background-color: transparent;
+  border-color: transparent;
   color: #4a90e2;
   list-style: none;
   cursor: pointer;

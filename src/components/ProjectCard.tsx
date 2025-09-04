@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import type { Projects } from "../generated/api/models/Projects";
 import type { Tasks } from "../generated/api/models/Tasks";
@@ -43,8 +43,7 @@ export function ProjectCard({
   const writeColorMap = (map: Record<string, string>) => {
     try {
       localStorage.setItem(storageKey, JSON.stringify(map));
-    } catch {
-    }
+    } catch {}
   };
 
   useEffect(() => {
@@ -74,7 +73,9 @@ export function ProjectCard({
           : DEFAULT_START;
 
       const duration = task.duration ?? 1;
-      const end = new Date(new Date(start).getTime() + duration * 24 * 60 * 60 * 1000)
+      const end = new Date(
+        new Date(start).getTime() + duration * 24 * 60 * 60 * 1000
+      )
         .toISOString()
         .slice(0, 10);
 
@@ -95,11 +96,31 @@ export function ProjectCard({
   }, [project?.tasks]);
 
   const handleNewTaskClick = (): void => {
-    navigate(`/projects/${project.id}/tasks/add`, { state: { projectId: project.id } });
+    navigate(`/projects/${project.id}/tasks/add`, {
+      state: { projectId: project.id },
+    });
   };
 
   const listKey = (task: Tasks, idx: number): string =>
-    task.id !== undefined && task.id !== null ? `id:${task.id}` : task.name ? `name:${task.name}` : `idx:${idx}`;
+    task.id !== undefined && task.id !== null
+      ? `id:${task.id}`
+      : task.name
+      ? `name:${task.name}`
+      : `idx:${idx}`;
+
+  // 🔹 riferimenti per sincronizzare altezza
+  const listRef = useRef<HTMLDivElement>(null);
+  const ganttRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const list = listRef.current;
+    const gantt = ganttRef.current;
+    if (!list || !gantt) return;
+
+    const maxHeight = Math.max(list.scrollHeight, gantt.scrollHeight);
+    list.style.height = `${maxHeight}px`;
+    gantt.style.height = `${maxHeight}px`;
+  }, [project?.tasks, ganttTasks]);
 
   return (
     <section
@@ -111,7 +132,7 @@ export function ProjectCard({
         <h2 onClick={() => onProjectClick(project)}>{project.name}</h2>
 
         <div className={classes.ProjectWrapper}>
-          <div className={classes.ProjectInformation}>
+          <div className={classes.ProjectInformation} ref={listRef}>
             <div className={classes.tasks}>
               <ul>
                 <div style={{ width: "100px", height: "70px" }} />
@@ -119,7 +140,9 @@ export function ProjectCard({
                   <li
                     key={listKey(task, idx)}
                     onClick={() => onTaskClick(task)}
-                    className={task.id?.toString() === taskId ? classes.active : ""}
+                    className={
+                      task.id?.toString() === taskId ? classes.active : ""
+                    }
                   >
                     {task.name}
                   </li>
@@ -128,9 +151,13 @@ export function ProjectCard({
             </div>
           </div>
 
-          <div className={classes.GanntContainer}>
+          <div className={classes.GanntContainer} ref={ganttRef}>
             <div className={classes.ganttInnerContainer}>
-              <GanttChart tasks={ganttTasks} startDate={DEFAULT_START} endDate="2025-07-31" />
+              <GanttChart
+                tasks={ganttTasks}
+                startDate={DEFAULT_START}
+                endDate="2025-07-31"
+              />
             </div>
           </div>
         </div>

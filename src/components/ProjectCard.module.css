@@ -62,6 +62,7 @@
   margin-top: 1%;
   margin-left: 1%;
   min-width: 10%;
+  overflow-y: auto;
 }
 
 .ProjectWrapper {
@@ -69,16 +70,14 @@
 }
 
 .ContentWrapper {
-
 }
 
 .GanntContainer {
   flex: 1;
   padding: 16px;
   overflow-x: auto;
-  overflow-y: scroll;
+  overflow-y: auto;
   min-width: 0;
-  height: 40vh;
 
   .ganttInnerContainer {
     width: max-content;

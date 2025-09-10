@@ -54,8 +54,8 @@ export const GanttChart: React.FC<GanttProps> = ({
       const startDay = Math.max(0, getDayOffset(start));
       const endDay = Math.min(
         totalDays,
-        getDayOffset(dayjs(end).endOf("day")) + 1
-      ); // +1 per includere tutto l'ultimo giorno
+        getDayOffset(dayjs(end).endOf("day"))
+      );
       const dayWidth = 100 / totalDays;
 
       return {

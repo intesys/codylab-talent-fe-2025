@@ -3,7 +3,7 @@ import type { Projects } from "../generated/api/models/Projects";
 import type { Tasks } from "../generated/api/models/Tasks";
 import { GanttChart } from "./GanttChart";
 import classes from "./ProjectCard.module.css";
-import { endDate, startDate } from "./projectCardMock";
+import dayjs from "dayjs";
 
 export function ProjectCard({
   project,
@@ -22,6 +22,8 @@ export function ProjectCard({
       state: { projectId: project.id },
     });
   };
+
+  const endDate = dayjs(project.startDate).add(project.duration??0, "day").endOf("day").toDate();
 
   return (
     <section
@@ -54,7 +56,7 @@ export function ProjectCard({
             <div className={classes.ganttInnerContainer}>
               <GanttChart
                 tasks={project.tasks??[]}
-                startDate={startDate}
+                startDate={project.startDate??""}
                 endDate={endDate}
               />
             </div>

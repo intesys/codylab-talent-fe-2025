@@ -2,6 +2,7 @@ import { useContext } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { WorkloadContext } from "../pages/WorkloadContext";
 import classes from "./UserInfo.module.css";
+import keycloak from "./keycloak";
 
 export function UserInfo() {
   const { userId } = useParams();
@@ -16,6 +17,7 @@ export function UserInfo() {
   if (!user) {
     return <div>User not found</div>;
   }
+  const canEdit = keycloak.hasRealmRole("admin");
 
   return (
     <div className={classes.sidebar}>
@@ -24,10 +26,10 @@ export function UserInfo() {
       </button>
       <div className={classes.user_fistName}>
         <h3>{user.firstName} {user.lastName}</h3>
-        <Link to={`/workload/${user.id}/edit`}>
+        {canEdit && <Link to={`/workload/${user.id}/edit`}>
           {" "}
           <span className="material-symbols-outlined">edit</span>{" "}
-        </Link>
+        </Link>}
       </div>
       <p>
         <strong>ID:</strong> {user.id}

@@ -12,7 +12,9 @@
     "postinstall": "msw init public --save"
   },
   "dependencies": {
+    "@tanstack/react-form": "^1.17.0",
     "dayjs": "^1.11.13",
+    "keycloak-js": "^26.2.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.7.0"

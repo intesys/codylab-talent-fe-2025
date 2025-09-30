@@ -1,95 +1,170 @@
+import { useForm } from "@tanstack/react-form";
+import { useContext } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import classes from "./UserForm.module.css";
-import { useContext, useState } from "react";
-import { WorkloadContext } from "../pages/WorkloadContext";
 import type { Users } from "../generated/api";
 import { users } from "../lib/api/api";
- 
+import { WorkloadContext } from "../pages/WorkloadContext";
+import classes from "./UserForm.module.css";
+import keycloak from "./keycloak";
+
 export function UserForm() {
-    const { workloadData: usersData, refreshWorkload } = useContext(WorkloadContext);
- 
-    const navigate = useNavigate();
-    const { id: userId } = useParams();
-    const currentUser = usersData.find((u) => u.id?.toString() === userId);
- 
-    const emptyState = {
+  const { workloadData: usersData, refreshWorkload } =
+    useContext(WorkloadContext);
+
+  const navigate = useNavigate();
+  const { id: userId } = useParams();
+  const currentUser = usersData.find((u) => u.id?.toString() === userId);
+
+  if (!keycloak.hasRealmRole("Admin")) {
+    alert("Non hai i permessi per modificare un utente.");
+    navigate("/workload");
+    return null;
+  }
+
+  const defaultValues = currentUser
+    ? {
+        firstName: currentUser.firstName ?? "",
+        lastName: currentUser.lastName ?? "",
+        username: currentUser.username ?? "",
+        email: currentUser.email ?? "",
+        profile: currentUser.profile ?? "",
+        dailyHours: currentUser.dailyHours ?? 0,
+      }
+    : {
         firstName: "",
         lastName: "",
         username: "",
         email: "",
         profile: "",
         dailyHours: 0,
-    };
- 
-    const [formData, setFormData] = useState<Users>(currentUser || emptyState);
- 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: name === "dailyHours" ? Number(value) : value,
-        }));
-    };
- 
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        const savedData = { ...formData, dailyHours: formData.dailyHours};
-        try {
-            if (currentUser) {
-                await users.updateUser({
-                    id: currentUser.id!,
-                    users: savedData
-                });
-            } else {
-                await users.createUser({ users: savedData }) ;
-            }
- 
-            await refreshWorkload();
-            navigate("/workload");
-        } catch (error) {
-            console.error("Error saving user:", error);
-        }
-    };
- 
-    return (
-        <div className={classes.project_form}>
-            <form onSubmit={handleSubmit}>
-                <label>Nome Utente</label>
-                <input type="text" name="firstName" value={formData.firstName} onChange={handleChange} required />
- 
-                <label>Cognome Utente</label>
-                <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} required />
- 
-                <label>Username</label>
-                <input type="text" name="username" value={formData.username} onChange={handleChange} required />
- 
-                <label>Email</label>
-                <input type="text" name="email" value={formData.email} onChange={handleChange} required />
- 
-               <label>Profilo</label>
-                <select
-                name="profile"
-                value={formData.profile}
-                onChange={handleChange}
+      };
+
+  const form = useForm({
+    defaultValues,
+    onSubmit: async ({ value }) => {
+      const save = currentUser
+        ? (user: { users: Users }) => {
+            return users.updateUser({ id: currentUser.id!, users: user.users });
+          }
+        : (user: { users: Users }) => {
+            return users.createUser(user);
+          };
+
+      const userData = {
+        users: {
+          ...value,
+          dailyHours: value.dailyHours,
+        },
+      };
+      try {
+        await save(userData);
+        await refreshWorkload();
+        alert("Utente salvato!");
+        navigate("/workload");
+      } catch (error) {
+        console.error("Error saving user:", error);
+        alert("Errore durante il salvataggio dell'utente.");
+      }
+    },
+  });
+
+  return (
+    <div className={classes.user_form}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          form.handleSubmit();
+        }}
+      >
+        <form.Field name="firstName">
+          {(field) => (
+            <>
+              <label>Nome Utente</label>
+              <input
+                type="text"
+                value={field.state.value}
+                onChange={(e) => field.handleChange(e.target.value)}
                 required
-                >
+              />
+            </>
+          )}
+        </form.Field>
+        <form.Field name="lastName">
+          {(field) => (
+            <>
+              <label>Cognome Utente</label>
+              <input
+                type="text"
+                value={field.state.value}
+                onChange={(e) => field.handleChange(e.target.value)}
+                required
+              />
+            </>
+          )}
+        </form.Field>
+        <form.Field name="username">
+          {(field) => (
+            <>
+              <label>Username</label>
+              <input
+                type="text"
+                value={field.state.value}
+                onChange={(e) => field.handleChange(e.target.value)}
+                required
+              />
+            </>
+          )}
+        </form.Field>
+        <form.Field name="email">
+          {(field) => (
+            <>
+              <label>Email</label>
+              <input
+                type="email"
+                value={field.state.value}
+                onChange={(e) => field.handleChange(e.target.value)}
+                required
+              />
+            </>
+          )}
+        </form.Field>
+        <form.Field name="profile">
+          {(field) => (
+            <>
+              <label>Profilo</label>
+              <select
+                name="profile"
+                value={field.state.value}
+                onChange={(e) => field.handleChange(e.target.value)}
+                required
+              >
                 <option value="">-- Seleziona un profilo --</option>
                 <option value="manager">Manager</option>
                 <option value="developer">Developer</option>
                 <option value="designer">Designer</option>
                 <option value="admin">Admin</option>
-                </select>
+              </select>
+            </>
+          )}
+        </form.Field>
 
- 
-                <label>Ore di lavoro</label>
-                <input type="number" name="dailyHours" value={formData.dailyHours} onChange={handleChange} required />
-
-                <button className={classes.addBtn} type="submit">
-                    {currentUser ? "Aggiorna Utente" : "Crea Utente"}
-                </button>
-            </form>
-        </div>
-    );
+        <form.Field name="dailyHours">
+          {(field) => (
+            <>
+              <label>Ore di lavoro</label>
+              <input
+                type="number"
+                value={field.state.value}
+                onChange={(e) => field.handleChange(Number(e.target.value))}
+                required
+              />
+            </>
+          )}
+        </form.Field>
+        <button className={classes.addBtn} type="submit">
+          {currentUser ? "Aggiorna Utente" : "Crea Utente"}
+        </button>
+      </form>
+    </div>
+  );
 }
- 
- 

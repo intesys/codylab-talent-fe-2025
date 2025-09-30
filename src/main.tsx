@@ -1,25 +1,20 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.tsx'
-
-
+import { createRoot } from "react-dom/client";
+import { StrictMode } from "react";
+import App from "./App";
+import { Mode } from "./utils/EnableMode";
+import "./index.css"
 async function enableMocking() {
-  if (process.env.NODE_ENV !== 'development') {
-    return
-  }
- 
-  const { worker } = await import('./mocks/browser.js')
- 
-  // `worker.start()` returns a Promise that resolves
-  // once the Service Worker is up and ready to intercept requests.
-  return worker.start()
+  if (import.meta.env.MODE !== Mode) return;
+
+  const { worker } = await import("./mocks/browser");
+  await worker.start();
 }
 
-enableMocking().then(()=>{
-  createRoot(document.getElementById('root')!).render(
+// Avvia mocking e poi il rendering
+enableMocking().then(() => {
+  createRoot(document.getElementById("root")!).render(
     <StrictMode>
       <App />
-    </StrictMode>,
-  )
-})
+    </StrictMode>
+  );
+});

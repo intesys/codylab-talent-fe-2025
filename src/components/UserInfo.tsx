@@ -17,7 +17,7 @@ export function UserInfo() {
   if (!user) {
     return <div>User not found</div>;
   }
-  const canEdit = keycloak.hasRealmRole("Admin");
+  const canEdit = keycloak.hasRealmRole("admin");
 
   return (
     <div className={classes.sidebar}>

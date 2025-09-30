@@ -4,6 +4,7 @@ import classes from "./ProjectInfo.module.css";
 import { ProjectsDataContext } from "../pages/ProjectsContext";
 import { projects } from "../lib/api/api";  // immagino che qui ci sia l'API Projects
 import { ProjectsStateEnum, type Projects } from "../generated/api";
+import keycloak from "./keycloak";
 
 export function ProjectInfo() {
   const navigate = useNavigate();
@@ -18,6 +19,8 @@ export function ProjectInfo() {
   const onClose = () => {
     navigate("/");
   };
+  
+  const canEdit = keycloak.hasRealmRole("admin");
 
   const updateState = (projectId: number, newState: ProjectsStateEnum) => {
     if (!project) return;
@@ -39,9 +42,9 @@ export function ProjectInfo() {
       </button>
       <div className={classes.prj_name}>
         <h3>{project.name}</h3>
-        <Link to={`/project/${project.id}/edit`}>
+        {canEdit && <Link to={`/project/${project.id}/edit`}>
           <span className="material-symbols-outlined">edit</span>
-        </Link>
+        </Link>}
       </div>
       <p><strong>ID:</strong> {project.id}</p>
       <p><strong>Codice:</strong> {project.code}</p>

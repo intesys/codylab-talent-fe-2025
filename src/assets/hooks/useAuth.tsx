@@ -34,7 +34,6 @@ export function useAuth() {
     };
 
     initialize();
-    #prova
   
   return { loading, authenticated, token };
 }

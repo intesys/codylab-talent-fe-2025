@@ -15,7 +15,7 @@ export function UserForm() {
   const { id: userId } = useParams();
   const currentUser = usersData.find((u) => u.id?.toString() === userId);
 
-  if (!keycloak.hasRealmRole("Admin")) {
+  if (!keycloak.hasRealmRole("admin")) {
     alert("Non hai i permessi per modificare un utente.");
     navigate("/workload");
     return null;

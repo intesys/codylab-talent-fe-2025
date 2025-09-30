@@ -125,7 +125,7 @@ export const GanttChart: React.FC<GanttProps> = ({
                   className={styles.taskBar}
                   style={{
                     ...calculateTaskStyle(start, end),
-                    backgroundColor: task.state === "in progress" ? "blue" : task.state === "completed" ? "green" : "red",
+                    backgroundColor: task.state === "in  progress" ? "blue" : task.state === "completed" ? "green" : "red",
                     top: "50%",
                     zIndex: 2,
                     transform: "translateY(-50%)",

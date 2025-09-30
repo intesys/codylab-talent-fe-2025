@@ -74,7 +74,7 @@ export interface Tasks {
  * @export
  */
 export const TasksStateEnum = {
-    InProgress: 'in progress',
+    InProgress: 'in  progress',
     Completed: 'completed',
     Deleted: 'deleted'
 } as const;

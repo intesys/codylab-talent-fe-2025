@@ -24,3 +24,37 @@ export interface EnhancedGanttProps {
   startDate: Date | string;
   endDate: Date | string;
 }
+
+/**
+ * Global configuration, loaded dynamically at startup
+ */
+export type GlobalConfig = {
+  /**
+   * API basepath
+   * Examples:
+   * - /api
+   * - http://hostname.com/api
+   */
+  basePath: string;
+  /**
+   * Time slot for partial day requests
+   */
+  timeSlots: number;
+  /**
+   * Work hours for morning
+   */
+  morningSlot: { start: string; end: string };
+  /**
+   * Work hours for aftenoon
+   */
+  afternoonSlot: { start: string; end: string };
+  /**
+   * Authentication with Microsoft MSAL
+   */
+  msal: {
+    enabled: boolean;
+    clientId: string;
+    authority: string;
+    redirectUri: string;
+  };
+};

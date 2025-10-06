@@ -1,7 +1,7 @@
 /**
  * Use this file only for defining default configuration
  */
-import { GlobalConfig } from "./types/config";
+import type { GlobalConfig } from "./components/Types";
 
 /**
  * DON'T USE THIS FOR ACCESSING GLOBAL CONFIGURATION!

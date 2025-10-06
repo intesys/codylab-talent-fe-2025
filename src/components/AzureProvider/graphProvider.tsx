@@ -1,7 +1,9 @@
-import { IPublicClientApplication } from "@azure/msal-browser";
+import type { IPublicClientApplication } from "@azure/msal-browser";
 import { Client } from "@microsoft/microsoft-graph-client";
-import { createContext, FC, ReactNode, useContext, useMemo } from "react";
+import  { createContext, useContext, useMemo } from "react";
 import { useGraphInstance } from "./useGraphInstance";
+import type { FC, ReactNode } from "react"; //FC, ReactNode,
+
 
 type GraphProviderProps = {
   msalInstance: IPublicClientApplication;

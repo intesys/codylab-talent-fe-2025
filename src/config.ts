@@ -1,5 +1,5 @@
 import { defaultConfig } from "./config.default";
-import { GlobalConfig } from "./types/config";
+import type { GlobalConfig } from "./components/Types";
 
 /**
  * Global configuration file, containing all environment variables and not included in building artifacts.

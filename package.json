@@ -12,6 +12,9 @@
     "postinstall": "msw init public --save"
   },
   "dependencies": {
+    "@azure/msal-browser": "^4.24.1",
+    "@azure/msal-react": "^3.0.20",
+    "@microsoft/microsoft-graph-client": "^3.0.7",
     "@tanstack/react-form": "^1.17.0",
     "dayjs": "^1.11.13",
     "keycloak-js": "^26.2.0",

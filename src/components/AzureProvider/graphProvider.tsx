@@ -15,6 +15,7 @@ export type GraphProviderContext = {
   msalInstance: IPublicClientApplication | null;
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const GraphContext = createContext<GraphProviderContext>({
   graphInstance: null,
   msalInstance: null,
@@ -41,4 +42,5 @@ export const GraphProvider: FC<GraphProviderProps> = ({
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useGraph = () => useContext(GraphContext);

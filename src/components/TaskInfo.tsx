@@ -1,9 +1,9 @@
 import { useContext, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { TasksStateEnum } from "../generated/api";
+import { tasks } from "../lib/api/msalInstance";
 import { ProjectsDataContext } from "../pages/ProjectsContext";
 import classes from "./TaskInfo.module.css";
-import { TasksStateEnum } from "../generated/api";
-import { tasks } from "../lib/api/api";
 
 export function TaskInfo() {
   const navigate = useNavigate();
@@ -14,7 +14,9 @@ export function TaskInfo() {
     .flatMap((project) => project.tasks || [])
     .find((t) => t.id?.toString() === taskId);
 
-  const [selectedState, setSelectedState] = useState<TasksStateEnum | undefined>(task?.state);
+  const [selectedState, setSelectedState] = useState<
+    TasksStateEnum | undefined
+  >(task?.state);
 
   const onClose = () => {
     navigate("/");
@@ -44,12 +46,28 @@ export function TaskInfo() {
           <span className="material-symbols-outlined">edit</span>
         </Link>
       </div>
-      <p><strong>ID:</strong> {task.id}</p>
-      <p><strong>Codice:</strong> {task.code}</p>
-      <p><strong>Progetto:</strong> {task.projectId}</p>
-      <p><strong>Descrizione:</strong> {task.description || "Nessuna descrizione."}</p>
-      <p><strong>Data di inizio:</strong> {task.startDate ? new Date(task.startDate).toLocaleDateString() : "Nessuna data di inizio."}</p>
-      <p><strong>Durata:</strong> {task.duration || "Nessuna durata."} giorni</p>
+      <p>
+        <strong>ID:</strong> {task.id}
+      </p>
+      <p>
+        <strong>Codice:</strong> {task.code}
+      </p>
+      <p>
+        <strong>Progetto:</strong> {task.projectId}
+      </p>
+      <p>
+        <strong>Descrizione:</strong>{" "}
+        {task.description || "Nessuna descrizione."}
+      </p>
+      <p>
+        <strong>Data di inizio:</strong>{" "}
+        {task.startDate
+          ? new Date(task.startDate).toLocaleDateString()
+          : "Nessuna data di inizio."}
+      </p>
+      <p>
+        <strong>Durata:</strong> {task.duration || "Nessuna durata."} giorni
+      </p>
 
       <form>
         <label>

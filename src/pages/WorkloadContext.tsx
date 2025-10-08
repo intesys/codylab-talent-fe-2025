@@ -1,7 +1,7 @@
 import { createContext, useCallback, useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 import type { Users } from "../generated/api";
-import { users } from "../lib/api/api";
+import { users } from "../lib/api/msalInstance";
 
 interface WorkloadContextType {
   workloadData: Users[];

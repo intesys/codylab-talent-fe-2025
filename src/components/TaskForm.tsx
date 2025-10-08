@@ -1,8 +1,8 @@
 import { useForm } from "@tanstack/react-form";
 import { useContext } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { TasksStateEnum, type Tasks, } from "../generated/api";
-import { tasks } from "../lib/api/api";
+import { TasksStateEnum, type Tasks } from "../generated/api";
+import { tasks } from "../lib/api/msalInstance";
 import { ProjectsDataContext } from "../pages/ProjectsContext";
 import classes from "./TaskForm.module.css";
 
@@ -173,7 +173,7 @@ export function TaskForm() {
             </>
           )}
         </form.Field>
-        
+
         <form.Field name="state">
           {(field) => (
             <>

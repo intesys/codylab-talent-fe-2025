@@ -1,7 +1,9 @@
 import { useMsal } from "@azure/msal-react";
 import { useCallback } from "react";
+
 import { graphRequest, loginRequest } from "../../lib/api/msalInstance";
-import { authEnabled } from "./authEnabled";
+import authEnabled from "./authEnabled";
+
 
 export enum AccessTokenType {
   api = "api",

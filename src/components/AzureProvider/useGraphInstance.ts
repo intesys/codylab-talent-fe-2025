@@ -1,6 +1,7 @@
 import { Client } from "@microsoft/microsoft-graph-client";
 import { useMemo } from "react";
-import { AccessTokenType, useGetAccessToken } from "./useGetAccessToken";
+import { AccessTokenType, useGetAccessToken } from "./userGetAccessToken";
+
 
 /**
  * generate a Graph API instance

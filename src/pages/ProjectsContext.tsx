@@ -1,7 +1,7 @@
-import { createContext, useEffect, useState, useCallback } from "react";
-import type { Projects } from "../generated/api";
-import { projects } from "../lib/api/api";
+import { createContext, useCallback, useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
+import type { Projects } from "../generated/api";
+import { projects } from "../lib/api/msalInstance";
 
 interface ProjectsContextType {
   projectsData: Projects[];
@@ -48,7 +48,7 @@ export function ProjectsContext() {
       value={{
         projectsData,
         refreshProjects,
-        loading
+        loading,
       }}
     >
       <Outlet />

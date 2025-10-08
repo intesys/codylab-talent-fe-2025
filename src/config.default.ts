@@ -5,7 +5,7 @@ import type { GlobalConfig } from "./components/Types";
 
 /**
  * DON'T USE THIS FOR ACCESSING GLOBAL CONFIGURATION!
- * USe "config" from "/config.ts" instead
+ * Use "config" from "/config.ts" instead
  */
 export const defaultConfig: GlobalConfig = {
   basePath: "/api",
@@ -21,10 +21,17 @@ export const defaultConfig: GlobalConfig = {
   msal: {
     /**
      * In production, ensure to enable authentication
+     * 👉 Se vuoi disattivare il login in locale, metti a false.
      */
     enabled: process.env.NODE_ENV !== "development",
-    clientId: "",
-    authority: "",
-    redirectUri: "",
+
+    /**
+     * Questi valori verranno sovrascritti da /config/config.json
+     * ma li lasciamo qui come fallback (dev/test).
+     */
+    clientId: "279c3475-04a5-4a02-b595-5c576648588a",
+    authority:
+      "https://login.microsoftonline.com/5b1eef84-b293-48b4-8c78-519fb6c2206e",
+    redirectUri: "http://localhost:5173",
   },
 };

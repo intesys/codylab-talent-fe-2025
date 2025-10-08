@@ -2,7 +2,7 @@ import { useForm } from "@tanstack/react-form";
 import { useContext } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ProjectsStateEnum, type Projects } from "../generated/api";
-import { projects } from "../lib/api/api";
+import { projects } from "../lib/api/msalInstance";
 import { ProjectsDataContext } from "../pages/ProjectsContext";
 import classes from "./ProjectForm.module.css";
 

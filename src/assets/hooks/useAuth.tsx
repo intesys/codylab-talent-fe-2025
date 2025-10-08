@@ -1,39 +1,45 @@
-import { useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { type AccountInfo } from "@azure/msal-browser";
+import { getAccessToken, msalInstance } from "../../lib/api/msalInstance";
 
 export function useAuth() {
-  const [authenticated, setAuthenticated] = useState<boolean>(false);
-  const [token, setToken] = useState<string | undefined>(undefined);
+  const [authenticated, setAuthenticated] = useState(false);
+  const [token, setToken] = useState<string>();
   const [loading, setLoading] = useState(true);
+  const [account, setAccount] = useState<AccountInfo | null>(null);
 
-  const refreshInterval = useRef<ReturnType<typeof setInterval> | null>(null);
-  const keycloakInstance = useRef<any>(null);
-
-    const initialize = async () => {
+  useEffect(() => {
+    const initializeAuth = async () => {
       try {
-        const { default: keycloak } = await import("../../components/keycloak");
-        keycloakInstance.current = keycloak;
+        // 🔹 Inizializza MSAL (necessario se usi redirect flow)
+        if ("initialize" in msalInstance) {
+          // la funzione initialize() esiste solo su versioni recenti
+          await msalInstance.initialize?.();
+        }
 
-        if(!keycloak.didInitialize) {  
-        const auth = await keycloak.init({
-          onLoad: "login-required",
-          checkLoginIframe: false,
-          pkceMethod: "S256",
-          redirectUri: window.location.origin,       
-        });
-        setAuthenticated(auth);
-      }
+        // 🔹 Ottieni account attivo
+        const accounts = msalInstance.getAllAccounts();
+        if (accounts.length > 0) {
+          msalInstance.setActiveAccount(accounts[0]);
+          setAccount(accounts[0]);
+          setAuthenticated(true);
 
-        setToken(keycloak.token);
-        setLoading(false);
-
+          const accessToken = await getAccessToken();
+          setToken(accessToken);
+        } else {
+          // Nessun account → login redirect
+          await msalInstance.loginRedirect();
+        }
       } catch (err) {
-        console.error("Errore inizializzazione Keycloak", err);
+        console.error("Errore inizializzazione MSAL:", err);
         setAuthenticated(false);
+      } finally {
         setLoading(false);
       }
     };
 
-    initialize();
-  
-  return { loading, authenticated, token };
+    initializeAuth();
+  }, []);
+
+  return { loading, authenticated, token, account };
 }

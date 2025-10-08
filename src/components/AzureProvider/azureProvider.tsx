@@ -1,9 +1,14 @@
-import { InteractionType, IPublicClientApplication } from "@azure/msal-browser";
+import {
+  InteractionType,
+  type IPublicClientApplication,
+} from "@azure/msal-browser";
 import { MsalAuthenticationTemplate, MsalProvider } from "@azure/msal-react";
-import { ReactNode } from "react";
+
+
+
 import { loginRequest } from "../../lib/api/msalInstance";
-import { authEnabled } from "./authEnabled";
-import { GraphProvider } from "./GraphProvider";
+import { GraphProvider } from "./graphProvider";
+import authEnabled from "./authEnabled";
 
 interface aZureProviderProps {
   msalInstance: IPublicClientApplication;
@@ -13,7 +18,7 @@ interface aZureProviderProps {
 export const AzureProvider = ({
   children,
   msalInstance,
-}: AzureProviderProps) => {
+}: aZureProviderProps) => {
   if (!authEnabled()) {
     console.log("Testing Mode: skipping MsalProvider");
     return (

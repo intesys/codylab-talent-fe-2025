@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import type { AccountInfo } from "@azure/msal-browser";
 import { getAccessToken, msalInstance } from "../../lib/api/msalInstance";
 
-export function useAuth() {
+export default function useAuth() {
   const [authenticated, setAuthenticated] = useState(false);
   const [token, setToken] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(true);

@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { type AccountInfo } from "@azure/msal-browser";
-import { getAccessToken, msalInstance } from "../../lib/api/msalInstance";
+import {
+  getAccessToken,
+  msalInstance,
+  authEnabled,
+  initializeMsal,
+} from "../../lib/api/msalInstance";
 
 export function useAuth() {
   const [authenticated, setAuthenticated] = useState(false);
@@ -11,27 +16,42 @@ export function useAuth() {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // 🔹 Inizializza MSAL (necessario se usi redirect flow)
-        if ("initialize" in msalInstance) {
-          // la funzione initialize() esiste solo su versioni recenti
-          await msalInstance.initialize?.();
+        // Se MSAL non è abilitato, salta l'autenticazione
+        if (!authEnabled()) {
+          setAuthenticated(true);
+          setLoading(false);
+          return;
         }
 
-        // 🔹 Ottieni account attivo
+        // 🔹 IMPORTANTE: Aspetta che MSAL sia inizializzato
+        await initializeMsal();
+
+        // 🔹 Ora leggi lo stato degli account (MSAL è pronto)
         const accounts = msalInstance.getAllAccounts();
+
         if (accounts.length > 0) {
-          msalInstance.setActiveAccount(accounts[0]);
-          setAccount(accounts[0]);
+          const activeAccount = msalInstance.getActiveAccount() || accounts[0];
+          msalInstance.setActiveAccount(activeAccount);
+          setAccount(activeAccount);
           setAuthenticated(true);
 
-          const accessToken = await getAccessToken();
-          setToken(accessToken);
+          // Ottieni token in modo silenzioso
+          try {
+            const accessToken = await getAccessToken();
+            setToken(accessToken);
+          } catch (err) {
+            console.error("Errore ottenimento token:", err);
+            // Se fallisce, getAccessToken() gestirà il re-login automaticamente
+            setAuthenticated(false);
+          }
         } else {
-          // Nessun account → login redirect
-          await msalInstance.loginRedirect();
+          // ⚠️ NON chiamare loginRedirect qui!
+          // Il login è gestito in App.tsx
+          console.log("⚠️ Nessun account trovato in useAuth");
+          setAuthenticated(false);
         }
       } catch (err) {
-        console.error("Errore inizializzazione MSAL:", err);
+        console.error("❌ Errore inizializzazione auth:", err);
         setAuthenticated(false);
       } finally {
         setLoading(false);
@@ -39,7 +59,27 @@ export function useAuth() {
     };
 
     initializeAuth();
-  }, []);
+  }, []); // ✅ Esegue solo una volta al mount
 
-  return { loading, authenticated, token, account };
+  // Funzione per aggiornare manualmente il token
+  const refreshToken = async () => {
+    try {
+      const accessToken = await getAccessToken();
+      setToken(accessToken);
+      return accessToken;
+    } catch (err) {
+      console.error("Errore refresh token:", err);
+      setToken(undefined);
+      setAuthenticated(false);
+      throw err;
+    }
+  };
+
+  return {
+    loading,
+    authenticated,
+    token,
+    account,
+    refreshToken,
+  };
 }

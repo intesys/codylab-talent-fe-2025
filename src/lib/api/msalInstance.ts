@@ -7,33 +7,24 @@ import {
 } from "../../generated/api";
 
 import {
-  EventType,
   PublicClientApplication,
   type AuthenticationResult,
   type EventMessage,
+  EventType,
+  InteractionRequiredAuthError,
 } from "@azure/msal-browser";
 
 import { config } from "../../config";
 
-/**
- * Controlla se l'autenticazione MSAL è abilitata
- */
+/** Controlla se l'autenticazione MSAL è abilitata */
 export const authEnabled = (): boolean => config.msal.enabled;
 
-/**
- * Scopes richiesti per ottenere il token.
- */
+/** Scopes per il token */
 export const loginRequest = {
   scopes: [`${config.msal.clientId}/.default`],
 };
 
-export const graphRequest = {
-  scopes: ["Calendars.Read"],
-};
-
-/**
- * Istanza MSAL
- */
+/** Istanza MSAL */
 export const msalInstance = new PublicClientApplication({
   auth: {
     clientId: config.msal.clientId,
@@ -41,66 +32,89 @@ export const msalInstance = new PublicClientApplication({
     redirectUri: config.msal.redirectUri,
   },
   cache: {
-    cacheLocation: "sessionStorage",
+    cacheLocation: "localStorage",
     storeAuthStateInCookie: false,
   },
 });
 
-/**
- * Se ci sono account salvati nella sessione, impostane il primo come attivo
- */
-const existingAccounts = msalInstance.getAllAccounts();
-if (existingAccounts.length > 0) {
-  msalInstance.setActiveAccount(existingAccounts[0]);
-}
+/** 🔹 IMPORTANTE: Promise per tracciare l'inizializzazione */
+let msalInitPromise: Promise<void> | null = null;
 
-/**
- * Callback sugli eventi MSAL
- */
+/** 🔹 Inizializza MSAL una sola volta */
+export const initializeMsal = async (): Promise<void> => {
+  if (!authEnabled()) return;
+
+  // Se già in corso, aspetta la stessa promise
+  if (msalInitPromise) {
+    return msalInitPromise;
+  }
+
+  msalInitPromise = (async () => {
+    try {
+      console.log("🔄 Inizializzazione MSAL...");
+      await msalInstance.initialize();
+      console.log("✅ MSAL inizializzato");
+
+      // Imposta account attivo se già loggato
+      const existingAccounts = msalInstance.getAllAccounts();
+      if (existingAccounts.length > 0) {
+        msalInstance.setActiveAccount(existingAccounts[0]);
+        console.log(
+          "✅ Account attivo impostato:",
+          existingAccounts[0].username
+        );
+      }
+    } catch (err) {
+      console.error("❌ Errore inizializzazione MSAL:", err);
+      throw err;
+    }
+  })();
+
+  return msalInitPromise;
+};
+
+/** Callback per aggiornare account attivo dopo login */
 msalInstance.addEventCallback((event: EventMessage) => {
   if (event.eventType === EventType.LOGIN_SUCCESS && event.payload) {
     const authResult = event.payload as AuthenticationResult;
     msalInstance.setActiveAccount(authResult.account);
+    console.log("✅ Login success event:", authResult.account?.username);
   }
 });
 
-/**
- * Ottiene un access token da MSAL. Se non disponibile o scaduto, forza login.
- */
+/** Ottiene token accesso senza loop */
 export const getAccessToken = async (): Promise<string> => {
   if (!authEnabled()) return "";
 
-  const account =
-    msalInstance.getActiveAccount() || msalInstance.getAllAccounts()[0];
+  // 🔹 Assicurati che MSAL sia inizializzato
+  await initializeMsal();
 
+  const account = msalInstance.getActiveAccount();
   if (!account) {
-    await msalInstance.loginRedirect(loginRequest);
-    return "";
+    throw new Error("Account non loggato.");
   }
 
   try {
-    const authenticationResult = await msalInstance.acquireTokenSilent({
+    const result = await msalInstance.acquireTokenSilent({
       ...loginRequest,
       account,
     });
-
-    return authenticationResult.accessToken;
-  } catch (error) {
-    console.warn("Token non disponibile, nuovo login richiesto:", error);
-    sessionStorage.clear();
-    await msalInstance.loginRedirect(loginRequest);
-    return "";
+    return result.accessToken;
+  } catch (error: any) {
+    if (error instanceof InteractionRequiredAuthError) {
+      console.warn("⚠️ Token scaduto, richiesto nuovo login");
+      await msalInstance.loginRedirect(loginRequest);
+      return "";
+    }
+    console.error("❌ Errore token MSAL:", error);
+    throw error;
   }
 };
 
-/**
- * URL base delle API backend
- */
+/** URL backend */
 const BASE_PATH = config.basePath || "http://localhost:8090/api/v1";
 
-/**
- * Crea la configurazione autenticata per le API
- */
+/** Config autenticata per le API */
 async function createConfig(): Promise<Configuration> {
   return new Configuration({
     basePath: BASE_PATH,
@@ -111,9 +125,7 @@ async function createConfig(): Promise<Configuration> {
   });
 }
 
-/**
- * Crea un proxy dinamico per le API, aggiornando il token ad ogni chiamata
- */
+/** Proxy dinamico per API con token aggiornato ad ogni chiamata */
 function createProxy<T extends new (...args: any[]) => any>(
   ApiClass: T
 ): InstanceType<T> {
@@ -132,9 +144,7 @@ function createProxy<T extends new (...args: any[]) => any>(
   });
 }
 
-/**
- * Esporta le API autenticate
- */
+/** API esportate */
 export const projects = createProxy(ProjectsApi);
 export const slots = createProxy(SlotsApi);
 export const tasks = createProxy(TasksApi);

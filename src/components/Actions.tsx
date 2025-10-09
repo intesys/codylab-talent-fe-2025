@@ -1,17 +1,11 @@
 import classes from './Actions.module.css';
 import { Link } from "react-router-dom";
 import { useLocation } from 'react-router-dom';
-import  keycloak  from './keycloak'; 
 
 export function Actions() {
   const location = useLocation();
   const isWorkloadPage = location.pathname.startsWith('/workload');
 
-  const handleLogout = () => {
-    keycloak.logout({
-      redirectUri: window.location.origin 
-    });
-  };
 
   return (
     <div className={classes.actions}>
@@ -24,7 +18,7 @@ export function Actions() {
           )}
         </li>
         <li>
-          <button onClick={handleLogout} className={classes.logoutBtn}>Logout</button>
+          <button className={classes.logoutBtn}>Logout</button>
         </li>
       </ul>
     </div>

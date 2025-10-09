@@ -5,11 +5,11 @@ export const msalConfig = {
     redirectUri: "http://localhost:5173", // o il tuo dominio
   },
   cache: {
-    cacheLocation: "localStorage",
+    cacheLocation: "sessionStorage",
     storeAuthStateInCookie: false,
   },
 };
 
 export const loginRequest = {
-  scopes: ["User.Read"], // oppure "User.Read" per MS Graph
+  scopes: ["279c3475-04a5-4a02-b595-5c576648588a/.default"],
 };

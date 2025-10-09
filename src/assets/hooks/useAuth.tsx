@@ -1,45 +1,71 @@
-// src/assets/hooks/useAzureAuth.ts
 import { useMsal } from "@azure/msal-react";
 import { useEffect, useState } from "react";
 import { loginRequest } from "../../authConfig";
 
 export const useAuth = () => {
-  const { instance, accounts } = useMsal();
+  const { instance, inProgress } = useMsal();
   const [loading, setLoading] = useState(true);
-  const [authenticated, setAuthenticated] = useState(false);
+  const [authenticated, setAuthenticated] = useState<boolean | undefined>(undefined);
+  const [account, setAccount] = useState<any>(null);
 
   useEffect(() => {
-    const checkAccount = async () => {
-      if (accounts && accounts.length > 0) {
-        setAuthenticated(true);
-      } else {
-        try {
-          await instance.handleRedirectPromise();
-          const currentAccounts = instance.getAllAccounts();
-          if (currentAccounts.length > 0) {
-            setAuthenticated(true);
-          }
-        } catch (e) {
-          console.error(e);
+    const initAuth = async () => {
+      if (!instance) return;
+
+      try {
+        // Gestione redirect MSAL
+        await instance.handleRedirectPromise();
+
+        const currentAccounts = instance.getAllAccounts();
+        if (currentAccounts.length > 0) {
+          const activeAccount = instance.getActiveAccount() || currentAccounts[0];
+          instance.setActiveAccount(activeAccount);
+          setAccount(activeAccount);
+          setAuthenticated(true);
+        } else {
+          setAuthenticated(false);
         }
+      } catch (err) {
+        console.error("Errore MSAL initialization:", err);
+        setAuthenticated(false);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
-    checkAccount();
-  }, [accounts, instance]);
+
+    if (inProgress === "none") {
+      initAuth();
+    }
+  }, [instance, inProgress]);
 
   const login = async () => {
-    await instance.loginPopup(loginRequest);
-    const currentAccounts = instance.getAllAccounts();
-    if (currentAccounts.length > 0) {
+    try {
+      const response = await instance.loginPopup(loginRequest);
+      instance.setActiveAccount(response.account);
+      setAccount(response.account);
       setAuthenticated(true);
+    } catch (err) {
+      console.error("Login fallito:", err);
     }
   };
 
-  const logout = () => {
-    instance.logoutPopup();
-    setAuthenticated(false);
-  };
+const logout = () => {
+  setAuthenticated(false);
+  setAccount(null);
+  setLoading(false);
 
-  return { loading, authenticated, login, logout, accounts };
+  const accounts = instance.getAllAccounts();
+  if (accounts.length > 0) {
+    // logout dell'account attivo
+    instance.logoutRedirect({
+      account: accounts[0], 
+      postLogoutRedirectUri: window.location.origin,
+    });
+  } else {
+    // fallback
+    window.location.href = window.location.origin;
+  }
+};
+
+  return { loading, authenticated, account, login, logout };
 };

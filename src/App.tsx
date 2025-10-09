@@ -17,17 +17,29 @@ import { UserForm } from "./components/UserForm";
 
 function App() {
   const [searchTerm, setSearchTerm] = useState("");
- const { loading, authenticated } = useAuth();
+  const { loading, authenticated, account, login, logout } = useAuth();
 
   if (loading) return <p>Loading...</p>;
 
   if (!authenticated) {
-    return <p>Accesso non autorizzato</p>;
+    // Mostra un fallback con bottone per login, niente redirect automatico
+    return (
+      <div style={{ padding: "2rem", textAlign: "center" }}>
+        <p>Non sei loggato</p>
+        <button onClick={login}>Accedi</button>
+      </div>
+    );
   }
+
   return (
     <div className={classes.app}>
       <Router>
-        <Header searchTerm={searchTerm} onSearchChange={setSearchTerm} />
+        <Header
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          user={account}
+          onLogout={logout}
+        />
         <Routes>
           <Route element={<ProjectsContext />}>
             <Route path="/" element={<Projects searchTerm={searchTerm} />}>
@@ -35,19 +47,13 @@ function App() {
               <Route path="tasks/:taskId" element={<TaskInfo />} />
             </Route>
             <Route path="/projects/add" element={<ProjectForm />} />
-            <Route
-              path="/projects/:projectId/tasks/add"
-              element={<TaskForm />}
-            />
+            <Route path="/projects/:projectId/tasks/add" element={<TaskForm />} />
             <Route path="/project/:id/edit" element={<ProjectForm />} />
             <Route path="/task/:id/edit" element={<TaskForm />} />
           </Route>
 
           <Route element={<WorkloadContexts />}>
-            <Route
-              path="/workload"
-              element={<Workload searchTerm={searchTerm} />}
-            >
+            <Route path="/workload" element={<Workload searchTerm={searchTerm} />}>
               <Route path="/workload/user/:userId" element={<UserInfo />} />
               <Route path="/workload/task/:taskId" element={<UserTasksInfo />} />
             </Route>

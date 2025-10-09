@@ -12,6 +12,7 @@
     "postinstall": "msw init public --save"
   },
   "dependencies": {
+    "@azure/msal-react": "^3.0.20",
     "@tanstack/react-form": "^1.17.0",
     "dayjs": "^1.11.13",
     "keycloak-js": "^26.2.0",

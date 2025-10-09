@@ -1,8 +1,11 @@
-import { createRoot } from "react-dom/client";
+import { PublicClientApplication } from "@azure/msal-browser";
+import { MsalProvider } from "@azure/msal-react";
 import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
 import App from "./App";
+import { msalConfig } from "./authConfig";
+import "./index.css";
 import { Mode } from "./utils/EnableMode";
-import "./index.css"
 async function enableMocking() {
   if (import.meta.env.MODE !== Mode) return;
 
@@ -10,11 +13,15 @@ async function enableMocking() {
   await worker.start();
 }
 
+const msalInstance = new PublicClientApplication(msalConfig);
+
 // Avvia mocking e poi il rendering
 enableMocking().then(() => {
   createRoot(document.getElementById("root")!).render(
-    <StrictMode>
-      <App />
-    </StrictMode>
+    <MsalProvider instance={msalInstance}>
+      <StrictMode>
+        <App />
+      </StrictMode>
+    </MsalProvider>
   );
 });

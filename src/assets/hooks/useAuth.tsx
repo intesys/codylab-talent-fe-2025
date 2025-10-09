@@ -1,39 +1,45 @@
-import { useRef, useState } from "react";
+// src/assets/hooks/useAzureAuth.ts
+import { useMsal } from "@azure/msal-react";
+import { useEffect, useState } from "react";
+import { loginRequest } from "../../authConfig";
 
-export function useAuth() {
-  const [authenticated, setAuthenticated] = useState<boolean>(false);
-  const [token, setToken] = useState<string | undefined>(undefined);
+export const useAuth = () => {
+  const { instance, accounts } = useMsal();
   const [loading, setLoading] = useState(true);
+  const [authenticated, setAuthenticated] = useState(false);
 
-  const refreshInterval = useRef<ReturnType<typeof setInterval> | null>(null);
-  const keycloakInstance = useRef<any>(null);
-
-    const initialize = async () => {
-      try {
-        const { default: keycloak } = await import("../../components/keycloak");
-        keycloakInstance.current = keycloak;
-
-        if(!keycloak.didInitialize) {  
-        const auth = await keycloak.init({
-          onLoad: "login-required",
-          checkLoginIframe: false,
-          pkceMethod: "S256",
-          redirectUri: window.location.origin,       
-        });
-        setAuthenticated(auth);
+  useEffect(() => {
+    const checkAccount = async () => {
+      if (accounts && accounts.length > 0) {
+        setAuthenticated(true);
+      } else {
+        try {
+          await instance.handleRedirectPromise();
+          const currentAccounts = instance.getAllAccounts();
+          if (currentAccounts.length > 0) {
+            setAuthenticated(true);
+          }
+        } catch (e) {
+          console.error(e);
+        }
       }
-
-        setToken(keycloak.token);
-        setLoading(false);
-
-      } catch (err) {
-        console.error("Errore inizializzazione Keycloak", err);
-        setAuthenticated(false);
-        setLoading(false);
-      }
+      setLoading(false);
     };
+    checkAccount();
+  }, [accounts, instance]);
 
-    initialize();
-  
-  return { loading, authenticated, token };
-}
+  const login = async () => {
+    await instance.loginPopup(loginRequest);
+    const currentAccounts = instance.getAllAccounts();
+    if (currentAccounts.length > 0) {
+      setAuthenticated(true);
+    }
+  };
+
+  const logout = () => {
+    instance.logoutPopup();
+    setAuthenticated(false);
+  };
+
+  return { loading, authenticated, login, logout, accounts };
+};

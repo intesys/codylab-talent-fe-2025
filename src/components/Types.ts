@@ -56,5 +56,7 @@ export type GlobalConfig = {
     clientId: string;
     authority: string;
     redirectUri: string;
+    postLogoutRedirectUri: string;
+    scopes: string[];
   };
 };

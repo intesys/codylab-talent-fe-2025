@@ -9,6 +9,7 @@ import { MsalAuthenticationTemplate, MsalProvider } from "@azure/msal-react";
 import { loginRequest } from "../../lib/api/msalInstance";
 import { GraphProvider } from "./graphProvider";
 import authEnabled from "./authEnabled";
+import useAuth from "./authEnabled";
 
 interface aZureProviderProps {
   msalInstance: IPublicClientApplication;
@@ -19,7 +20,7 @@ export const AzureProvider = ({
   children,
   msalInstance,
 }: aZureProviderProps) => {
-  if (!authEnabled()) {
+  if (!useAuth()) {
     console.log("Testing Mode: skipping MsalProvider");
     return (
       <GraphProvider msalInstance={msalInstance}>{children}</GraphProvider>

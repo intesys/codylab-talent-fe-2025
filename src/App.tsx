@@ -1,76 +1,69 @@
 import { useState, useEffect } from "react";
-import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
+import {
+  Route,
+  BrowserRouter as Router,
+  Routes,
+  Navigate,
+} from "react-router-dom";
 import classes from "./App.module.css";
-import { useAuth } from "./assets/hooks/useAuth";
-
-import { Header } from "./components/Header";
-import { ProjectForm } from "./components/ProjectForm";
-import { ProjectInfo } from "./components/ProjectInfo";
+import { useMsal } from "@azure/msal-react";
+import { ManualgetAuthState } from "./lib/api/msalInstance";
+import { UserForm } from "./components/UserForm";
+import { UserTasksInfo } from "./components/UserTasksInfo";
+import { Workload } from "./pages/Workload";
 import { TaskForm } from "./components/TaskForm";
+import { WorkloadContexts } from "./pages/WorkloadContext";
 import { TaskInfo } from "./components/TaskInfo";
 import { UserInfo } from "./components/UserInfo";
-import { UserTasksInfo } from "./components/UserTasksInfo";
+import { ProjectForm } from "./components/ProjectForm";
+import { ProjectInfo } from "./components/ProjectInfo";
 import { Projects } from "./pages/Projects";
 import { ProjectsContext } from "./pages/ProjectsContext";
-import { Workload } from "./pages/Workload";
-import { WorkloadContexts } from "./pages/WorkloadContext";
-import { UserForm } from "./components/UserForm";
-import {
-  msalInstance,
-  loginRequest,
-  initializeMsal,
-} from "./lib/api/msalInstance";
+import { Header } from "./components/Header";
+
+// ... tus imports components
 
 function App() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [msalInitialized, setMsalInitialized] = useState(false);
-  const { loading, authenticated } = useAuth();
+  const { instance, inProgress } = useMsal();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [appLoading, setAppLoading] = useState(true);
 
-  // 🔹 Inizializza MSAL UNA SOLA VOLTA all'avvio
   useEffect(() => {
-    const setupMsal = async () => {
-      try {
-        console.log("🔄 Inizializzazione MSAL in App...");
+    console.log("🔍 App State:", { inProgress, isAuthenticated, appLoading });
 
-        // Inizializza MSAL (usa la funzione dal modulo)
-        await initializeMsal();
+    const checkAuth = () => {
+      const authState = ManualgetAuthState();
+      console.log("🔐 Auth State:", authState);
 
-        // Gestisci il redirect da Azure AD (se presente)
-        const redirectResponse = await msalInstance.handleRedirectPromise();
+      if (authState.isAuthenticated) {
+        setIsAuthenticated(true);
+        setAppLoading(false);
+        return;
+      }
 
-        if (redirectResponse) {
-          console.log(
-            "✅ Redirect completato, utente:",
-            redirectResponse.account?.username
-          );
-          // L'account è già stato impostato dall'event callback
-        } else {
-          // Non siamo in un redirect, controlla se c'è un account
-          const accounts = msalInstance.getAllAccounts();
+      if (inProgress === "none" && !authState.isAuthenticated) {
+        console.log("🔐 Non autenticato - mostro schermata login");
+        setIsAuthenticated(false);
+        setAppLoading(false);
+        return;
+      }
 
-          if (accounts.length === 0) {
-            console.log("⚠️ Nessun account trovato, avvio login...");
-            // Nessun account, avvia il login
-            await msalInstance.loginRedirect(loginRequest);
-            return; // Il redirect interromperà l'esecuzione
-          } else {
-            console.log("✅ Account già presente:", accounts[0].username);
-            msalInstance.setActiveAccount(accounts[0]);
-          }
-        }
-
-        setMsalInitialized(true);
-      } catch (error) {
-        console.error("❌ Errore inizializzazione MSAL:", error);
-        setMsalInitialized(true); // Imposta comunque per evitare blocchi
+      if (inProgress === "login") {
+        console.log("🔄 Login in corso...");
+        setAppLoading(true);
       }
     };
 
-    initializeMsal();
-  }, []); // ✅ Array vuoto = esegue SOLO una volta
+    if (inProgress === "startup") {
+      return;
+    }
 
-  // 🔹 Mostra loading mentre MSAL si inizializza
-  if (!msalInitialized) {
+    checkAuth();
+  }, [inProgress]);
+
+  // 🔹 Loading durante inizializzazione
+  if (inProgress === "startup" || appLoading) {
     return (
       <div
         className={classes.app}
@@ -81,30 +74,16 @@ function App() {
           height: "100vh",
         }}
       >
-        <p>Inizializzazione autenticazione...</p>
+        <div className="text-center">
+          <div className="spinner"></div>
+          <p>Inizializzazione Azure AD...</p>
+        </div>
       </div>
     );
   }
 
-  // 🔹 Mostra loading mentre useAuth controlla lo stato
-  if (loading) {
-    return (
-      <div
-        className={classes.app}
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-        }}
-      >
-        <p>Caricamento...</p>
-      </div>
-    );
-  }
-
-  // 🔹 Se non autenticato (non dovrebbe succedere se MSAL funziona)
-  if (!authenticated) {
+  // 🔹 Schermata di LOGIN
+  if (!isAuthenticated) {
     return (
       <div
         className={classes.app}
@@ -114,38 +93,64 @@ function App() {
           alignItems: "center",
           height: "100vh",
           flexDirection: "column",
-          gap: "1rem",
+          gap: "2rem",
         }}
       >
-        <p>Accesso non autorizzato</p>
-        <button onClick={() => msalInstance.loginRedirect(loginRequest)}>
-          Accedi nuovamente
+        <div className="text-center">
+          <h1>La Mia App</h1>
+          <p>Accedi per continuare</p>
+        </div>
+
+        <button
+          onClick={() => {
+            console.log("🔄 Cliccato pulsante login manuale");
+            manualLogin();
+          }}
+          style={{
+            padding: "12px 24px",
+            fontSize: "16px",
+            backgroundColor: "#0078d4",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer",
+          }}
+        >
+          Accedi con Azure AD
         </button>
       </div>
     );
   }
 
-  // 🔹 Utente autenticato, mostra l'app
+  // 🔹 App principale (AUTENTICATO)
   return (
     <div className={classes.app}>
       <Router>
         <Header searchTerm={searchTerm} onSearchChange={setSearchTerm} />
         <Routes>
-          {/* Projects */}
+          {/* 🔹 CORREGGI: Aggiungi Navigate per la root */}
+          <Route path="/" element={<Navigate to="/projects" replace />} />
+
+          {/* Projects Routes */}
           <Route element={<ProjectsContext />}>
-            <Route path="/" element={<Projects searchTerm={searchTerm} />} />
+            <Route
+              path="/projects"
+              element={<Projects searchTerm={searchTerm} />}
+            />
             <Route path="/projects/add" element={<ProjectForm />} />
             <Route path="/projects/:projectId" element={<ProjectInfo />} />
             <Route
               path="/projects/:projectId/tasks/add"
               element={<TaskForm />}
             />
-            <Route path="/tasks/:taskId" element={<TaskInfo />} />
             <Route path="/project/:id/edit" element={<ProjectForm />} />
-            <Route path="/task/:id/edit" element={<TaskForm />} />
           </Route>
 
-          {/* Workload */}
+          {/* Tasks Routes */}
+          <Route path="/tasks/:taskId" element={<TaskInfo />} />
+          <Route path="/task/:id/edit" element={<TaskForm />} />
+
+          {/* Workload Routes */}
           <Route element={<WorkloadContexts />}>
             <Route
               path="/workload"
@@ -156,6 +161,9 @@ function App() {
             <Route path="/workload/add" element={<UserForm />} />
             <Route path="/workload/:id/edit" element={<UserForm />} />
           </Route>
+
+          {/* 🔹 Aggiungi una route 404 fallback */}
+          <Route path="*" element={<div>Pagina non trovata</div>} />
         </Routes>
       </Router>
     </div>

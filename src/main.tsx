@@ -1,20 +1,35 @@
 import { createRoot } from "react-dom/client";
 import { StrictMode } from "react";
+import { MsalProvider } from "@azure/msal-react";
 import App from "./App";
-import { Mode } from "./utils/EnableMode";
-import "./index.css"
-async function enableMocking() {
-  if (import.meta.env.MODE !== Mode) return;
+import { msalInstance, initializeMsal } from "./lib/api/msalInstance";
+import "./index.css";
 
-  const { worker } = await import("./mocks/browser");
-  await worker.start();
-}
+async function bootstrapApp() {
+  try {
+    console.log("🚀 Avvio applicazione...");
 
-// Avvia mocking e poi il rendering
-enableMocking().then(() => {
+    // 🔹 Inizializza MSAL con timeout
+    const msalPromise = initializeMsal();
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Timeout MSAL")), 10000)
+    );
+
+    await Promise.race([msalPromise, timeoutPromise]);
+    console.log("✅ MSAL inizializzato");
+  } catch (error) {
+    console.error("❌ Errore inizializzazione MSAL:", error);
+    // Continua comunque
+  }
+
+  // 🔹 Renderizza sempre l'app
   createRoot(document.getElementById("root")!).render(
     <StrictMode>
-      <App />
+      <MsalProvider instance={msalInstance}>
+        <App />
+      </MsalProvider>
     </StrictMode>
   );
-});
+}
+
+bootstrapApp();

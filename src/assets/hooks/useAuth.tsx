@@ -1,77 +1,113 @@
 import { useEffect, useState } from "react";
-import { type AccountInfo } from "@azure/msal-browser";
+import type { AccountInfo } from "@azure/msal-browser";
 import {
-  getAccessToken,
   msalInstance,
-  authEnabled,
-  initializeMsal,
+  loginRequest,
+  ManualgetAuthState, // 🔹 USA questa invece di getAccessToken
 } from "../../lib/api/msalInstance";
 
-export function useAuth() {
+export default function useAuth() {
   const [authenticated, setAuthenticated] = useState(false);
-  const [token, setToken] = useState<string>();
+  const [token, setToken] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [account, setAccount] = useState<AccountInfo | null>(null);
 
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // Se MSAL non è abilitato, salta l'autenticazione
-        if (!authEnabled()) {
-          setAuthenticated(true);
+        console.log("🔄 useAuth - Inizializzazione...");
+
+        // 🔹 CRITICO: Gestisci redirect promise PRIMA di tutto
+        const redirectResult = await msalInstance.handleRedirectPromise();
+
+        if (redirectResult) {
+          console.log("✅ useAuth - Redirect completato");
+          if (redirectResult.account) {
+            msalInstance.setActiveAccount(redirectResult.account);
+            setAccount(redirectResult.account);
+            setAuthenticated(true);
+
+            // 🔹 NON chiamare getAccessToken qui - potrebbe causare loop
+            console.log("✅ useAuth - Utente autenticato da redirect");
+          }
           setLoading(false);
-          return;
+          return; // ⚠️ IMPORTANTE: esci qui
         }
 
-        // 🔹 IMPORTANTE: Aspetta che MSAL sia inizializzato
-        await initializeMsal();
+        // 🔹 Controlla lo stato attuale dell'autenticazione
+        const authState = ManualgetAuthState();
+        console.log("🔍 useAuth - Stato:", authState);
 
-        // 🔹 Ora leggi lo stato degli account (MSAL è pronto)
-        const accounts = msalInstance.getAllAccounts();
-
-        if (accounts.length > 0) {
-          const activeAccount = msalInstance.getActiveAccount() || accounts[0];
-          msalInstance.setActiveAccount(activeAccount);
-          setAccount(activeAccount);
+        if (authState.isAuthenticated && authState.account) {
+          // 🔹 UTENTE GIA' AUTENTICATO
+          setAccount(authState.account);
           setAuthenticated(true);
-
-          // Ottieni token in modo silenzioso
-          try {
-            const accessToken = await getAccessToken();
-            setToken(accessToken);
-          } catch (err) {
-            console.error("Errore ottenimento token:", err);
-            // Se fallisce, getAccessToken() gestirà il re-login automaticamente
-            setAuthenticated(false);
-          }
+          console.log("✅ useAuth - Utente già autenticato");
         } else {
-          // ⚠️ NON chiamare loginRedirect qui!
-          // Il login è gestito in App.tsx
-          console.log("⚠️ Nessun account trovato in useAuth");
+          // 🔹 UTENTE NON AUTENTICATO - NON fare login automatico!
           setAuthenticated(false);
+          setAccount(null);
+          console.log(
+            "🔐 useAuth - Utente non autenticato (login manuale richiesto)"
+          );
         }
       } catch (err) {
-        console.error("❌ Errore inizializzazione auth:", err);
+        console.error("❌ useAuth - Errore:", err);
         setAuthenticated(false);
       } finally {
         setLoading(false);
+        console.log("🏁 useAuth - Inizializzazione completata");
       }
     };
 
     initializeAuth();
-  }, []); // ✅ Esegue solo una volta al mount
+  }, []);
 
-  // Funzione per aggiornare manualmente il token
-  const refreshToken = async () => {
+  // 🔹 Funzione per login MANUALE (solo quando l'utente clicca)
+  const login = async () => {
     try {
-      const accessToken = await getAccessToken();
-      setToken(accessToken);
-      return accessToken;
+      console.log("🔐 useAuth - Avvio login manuale...");
+      setLoading(true);
+      await msalInstance.loginRedirect(loginRequest);
+      // Il redirect interrompe l'esecuzione qui
     } catch (err) {
-      console.error("Errore refresh token:", err);
-      setToken(undefined);
-      setAuthenticated(false);
-      throw err;
+      console.error("❌ useAuth - Errore login:", err);
+      setLoading(false);
+    }
+  };
+
+  // 🔹 Funzione per logout
+  const logout = async () => {
+    try {
+      setLoading(true);
+      await msalInstance.logoutRedirect({
+        postLogoutRedirectUri: window.location.origin,
+      });
+    } catch (err) {
+      console.error("❌ useAuth - Errore logout:", err);
+      setLoading(false);
+    }
+  };
+
+  // 🔹 Funzione per ottenere token (SOLO quando serve)
+  const getToken = async (): Promise<string | null> => {
+    if (!authenticated) {
+      return null;
+    }
+
+    try {
+      const account = msalInstance.getActiveAccount();
+      if (!account) return null;
+
+      const result = await msalInstance.acquireTokenSilent({
+        ...loginRequest,
+        account,
+      });
+      setToken(result.accessToken);
+      return result.accessToken;
+    } catch (error) {
+      console.warn("⚠️ useAuth - Errore token:", error);
+      return null;
     }
   };
 
@@ -80,6 +116,8 @@ export function useAuth() {
     authenticated,
     token,
     account,
-    refreshToken,
+    login, // ✅ Per login MANUALE
+    logout, // ✅ Per logout
+    getToken, // ✅ Per ottenere token quando serve
   };
 }

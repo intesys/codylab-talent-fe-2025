@@ -19,8 +19,7 @@ export const loginRequest = {
     "openid",
     "profile",
     "email",
-    // 🔹 Commenta fino a quando non configuri correttamente Azure AD
-    // "api://279c3475-04a5-4a02-b595-5c576648588a/.default",
+     "api://279c3475-04a5-4a02-b595-5c576648588a/.default",
   ],
 };
 
@@ -116,6 +115,8 @@ export const initializeMsal = async (): Promise<void> => {
 };
 
 /** 🔹 GET ACCESS TOKEN - Versione semplificata */
+/** 🔹 GET ACCESS TOKEN - Versione corretta per API */
+/** 🔹 GET ACCESS TOKEN - Versione corretta con scope API */
 export const getAccessToken = async (): Promise<string | null> => {
   if (!authEnabled()) {
     return "dev-token";
@@ -123,31 +124,60 @@ export const getAccessToken = async (): Promise<string | null> => {
 
   if (!msalInitialized) {
     console.warn("⚠️ MSAL non inizializzato");
-    return null;
+    await initializeMsal();
   }
 
   const account = msalInstance.getActiveAccount();
   if (!account) {
-    console.log("🔐 Nessun account attivo");
+    console.log("🔐 Nessun account attivo - login richiesto");
     return null;
   }
 
   try {
-    // 🔹 PROVA prima con scope semplici
-    const simpleScopes = {
-      scopes: ["openid", "profile", "email"],
+    // 🔹 PRIMA PROVA CON SCOPE API SPECIFICO
+    const apiScopes = {
+      scopes: ["api://279c3475-04a5-4a02-b595-5c576648588a/access_as_user"],
+      account,
     };
 
-    const result = await msalInstance.acquireTokenSilent({
-      ...simpleScopes,
-      account,
-    });
+    console.log("🔄 Richiesta token con scope API...");
+    const result = await msalInstance.acquireTokenSilent(apiScopes);
 
-    console.log("✅ Token ottenuto con successo");
+    console.log("✅ Token API ottenuto con successo");
     return result.accessToken;
-  } catch (error: any) {
-    console.warn("⚠️ Errore ottenimento token:", error);
-    return null;
+
+  } catch (apiError: any) {
+    console.warn("⚠️ Errore scope API, provo con .default:", apiError);
+
+    try {
+      // 🔹 FALLBACK: SCOPE .default
+      const defaultScopes = {
+        scopes: ["api://279c3475-04a5-4a02-b595-5c576648588a/.default"],
+        account,
+      };
+
+      const defaultResult = await msalInstance.acquireTokenSilent(defaultScopes);
+      console.log("✅ Token .default ottenuto");
+      return defaultResult.accessToken;
+
+    } catch (defaultError: any) {
+      console.error("❌ Errore anche con scope .default:", defaultError);
+
+      // 🔹 ULTIMO TENTATIVO: SCOPE BASIC
+      try {
+        const basicScopes = {
+          scopes: ["openid", "profile", "email"],
+          account,
+        };
+
+        const basicResult = await msalInstance.acquireTokenSilent(basicScopes);
+        console.log("⚠️ Token basic ottenuto (potrebbe non funzionare per le API)");
+        return basicResult.accessToken;
+      } catch (basicError) {
+        console.error("❌ Errore completo ottenimento token:", basicError);
+        return null;
+      }
+    }
   }
 };
 
@@ -302,10 +332,24 @@ class ApiWrapper {
   };
 
   static users = {
-    getUsers: async () => {
+    getUsers: async (params?: {
+      pageNumber?: number;
+      size?: number;
+      sort?: string;
+    }) => {
       const config = await ApiWrapper.getConfig();
       const api = new UsersApi(config);
-      return api.getUsers();
+
+      // 🔹 CORREZIONE: Users con paginazione
+      if (params) {
+        return api.getUsers({
+          pageNumber: params.pageNumber || 0,
+          size: params.size || 10,
+          sort: params.sort || "id",
+        });
+      } else {
+        return api.getUsers();
+      }
     },
     createUser: async (user: any) => {
       const config = await ApiWrapper.getConfig();

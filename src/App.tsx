@@ -104,7 +104,9 @@ function App() {
         <button
           onClick={() => {
             console.log("🔄 Cliccato pulsante login manuale");
-            manualLogin();
+            instance.loginRedirect().catch((e) => {
+              console.error("❌ Errore durante il login:", e);
+            });
           }}
           style={{
             padding: "12px 24px",

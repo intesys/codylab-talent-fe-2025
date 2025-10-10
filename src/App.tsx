@@ -7,29 +7,20 @@ import { ProjectForm } from "./components/ProjectForm";
 import { ProjectInfo } from "./components/ProjectInfo";
 import { TaskForm } from "./components/TaskForm";
 import { TaskInfo } from "./components/TaskInfo";
+import { UserForm } from "./components/UserForm";
 import { UserInfo } from "./components/UserInfo";
 import { UserTasksInfo } from "./components/UserTasksInfo";
 import { Projects } from "./pages/Projects";
 import { ProjectsContext } from "./pages/ProjectsContext";
 import { Workload } from "./pages/Workload";
 import { WorkloadContexts } from "./pages/WorkloadContext";
-import { UserForm } from "./components/UserForm";
 
 function App() {
   const [searchTerm, setSearchTerm] = useState("");
-  const { loading, authenticated, account, login, logout } = useAuth();
+  const { loading, authenticated} = useAuth();
 
   if (loading) return <p>Loading...</p>;
-
-  if (!authenticated) {
-    // Mostra un fallback con bottone per login, niente redirect automatico
-    return (
-      <div style={{ padding: "2rem", textAlign: "center" }}>
-        <p>Non sei loggato</p>
-        <button onClick={login}>Accedi</button>
-      </div>
-    );
-  }
+  if (!authenticated) return <p>Reindirizzamento a Microsoft...</p>;
 
   return (
     <div className={classes.app}>
@@ -37,8 +28,6 @@ function App() {
         <Header
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
-          user={account}
-          onLogout={logout}
         />
         <Routes>
           <Route element={<ProjectsContext />}>
@@ -47,15 +36,24 @@ function App() {
               <Route path="tasks/:taskId" element={<TaskInfo />} />
             </Route>
             <Route path="/projects/add" element={<ProjectForm />} />
-            <Route path="/projects/:projectId/tasks/add" element={<TaskForm />} />
+            <Route
+              path="/projects/:projectId/tasks/add"
+              element={<TaskForm />}
+            />
             <Route path="/project/:id/edit" element={<ProjectForm />} />
             <Route path="/task/:id/edit" element={<TaskForm />} />
           </Route>
 
           <Route element={<WorkloadContexts />}>
-            <Route path="/workload" element={<Workload searchTerm={searchTerm} />}>
+            <Route
+              path="/workload"
+              element={<Workload searchTerm={searchTerm} />}
+            >
               <Route path="/workload/user/:userId" element={<UserInfo />} />
-              <Route path="/workload/task/:taskId" element={<UserTasksInfo />} />
+              <Route
+                path="/workload/task/:taskId"
+                element={<UserTasksInfo />}
+              />
             </Route>
             <Route path="/workload/add" element={<UserForm />} />
             <Route path="/workload/:id/edit" element={<UserForm />} />

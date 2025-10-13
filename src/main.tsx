@@ -4,6 +4,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import { msalConfig } from "./authConfig";
+import "./index.css";
 
 const msalInstance = new PublicClientApplication(msalConfig);
 

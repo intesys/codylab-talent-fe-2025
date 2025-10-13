@@ -1,5 +1,5 @@
 import { useMsal } from "@azure/msal-react";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { loginRequest } from "../../authConfig";
 
 export const useAuth = () => {
@@ -52,34 +52,10 @@ export const useAuth = () => {
     }
   };
 
-  const getAccessToken = useCallback(async (): Promise<string | null> => {
-    if (!account || !instance) return null;
-    try {
-      const response = await instance.acquireTokenSilent({
-        ...loginRequest,
-        account: account,
-      });
-      return response.accessToken;
-    } catch (err) {
-      console.warn("Non è stato possibile ottenere il token silenziosamente, si tenta redirect:", err);
-      try {
-        const response = await instance.acquireTokenRedirect({
-          ...loginRequest,
-          account: account,
-        });
-        return response.accessToken || null;
-      } catch (err) {
-        console.error("Non è stato possibile ottenere il token:", err);
-        return null;
-      }
-    }
-  }, [account, instance]);
-
   return {
     loading,
     authenticated,
     account,
     logout,
-    getAccessToken,
-  };
+    };
 };
